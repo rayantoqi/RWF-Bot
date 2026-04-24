@@ -10,6 +10,7 @@ const { Strategy } = require('passport-discord');
 const { QuickDB } = require("quick.db");
 
 const app = express();
+app.use(express.json());
 const port = process.env.PORT || 3000;
 const db = new QuickDB();
 
@@ -46,6 +47,43 @@ app.use(express.static(path.join(__dirname, 'website')));
 
 app.get('/', (req, res) => {
     res.sendFile(__dirname + '/website/index.html');
+});
+
+// API لإرسال لوحة التذاكر من الموقع
+app.post('/api/send-ticket-panel/:guildID', express.json(), async (req, res) => {
+    if (!req.isAuthenticated()) return res.status(401).json({ error: "غير مصرح لك" });
+
+    const { channelId, title } = req.body;
+    const guildID = req.params.guildID;
+
+    try {
+        const guild = client.guilds.cache.get(guildID);
+        if (!guild) return res.status(404).json({ error: "السيرفر غير موجود" });
+
+        const channel = await guild.channels.fetch(channelId);
+        if (!channel) return res.status(404).json({ error: "القناة غير موجودة" });
+
+        const embed = new EmbedBuilder()
+            .setTitle(title || "مركز الدعم الفني")
+            .setDescription("لفتح تذكرة جديدة، يرجى الضغط على الزر أدناه 📩")
+            .setColor("#5865F2")
+            .setFooter({ text: "RWF System" });
+
+        const row = new ActionRowBuilder().addComponents(
+            new ButtonBuilder()
+                .setCustomId('create_ticket') // هذا يجب أن يطابق الموجود في كود الـ interactionCreate
+                .setLabel('فتح تذكرة')
+                .setEmoji('📩')
+                .setStyle(ButtonStyle.Primary),
+        );
+
+        await channel.send({ embeds: [embed], components: [row] });
+        res.json({ success: true });
+
+    } catch (error) {
+        console.error("Error sending ticket panel:", error);
+        res.status(500).json({ error: "فشل إرسال الرسالة إلى الديسكورد" });
+    }
 });
 
 app.listen(port, () => {
