@@ -221,108 +221,108 @@ client.on('interactionCreate'), async interaction => {
         }
     }
 }
-    const { ChannelType, PermissionFlagsBits } = require('discord.js');
+const { ChannelType, PermissionFlagsBits } = require('discord.js');
 
-    client.on('interactionCreate', async interaction => {
-        // التأكد أن التفاعل هو ضغطة زر "فتح تكت"
-        if (interaction.isButton() && interaction.customId === 'create_ticket') {
-            await interaction.deferReply({ ephemeral: true });
+client.on('interactionCreate', async interaction => {
+    // التأكد أن التفاعل هو ضغطة زر "فتح تكت"
+    if (interaction.isButton() && interaction.customId === 'create_ticket') {
+        await interaction.deferReply({ ephemeral: true });
 
-            // التحقق إذا كان الشخص لديه تكت مفتوح مسبقاً (اختياري)
-            const channelName = `ticket-${interaction.user.username.toLowerCase()}`;
-            const existingChannel = interaction.guild.channels.cache.find(c => c.name === channelName);
+        // التحقق إذا كان الشخص لديه تكت مفتوح مسبقاً (اختياري)
+        const channelName = `ticket-${interaction.user.username.toLowerCase()}`;
+        const existingChannel = interaction.guild.channels.cache.find(c => c.name === channelName);
 
-            if (existingChannel) {
-                return await interaction.editReply(`لديك تكت مفتوح بالفعل: ${existingChannel}`);
-            }
-
-            // إنشاء القناة وتحديد الصلاحيات
-            const ticketChannel = await interaction.guild.channels.create({
-                name: channelName,
-                type: ChannelType.GuildText,
-                permissionOverwrites: [
-                    {
-                        id: 'ID_رتبة_الإدارة_هنا', // استبدله بـ ID رتبة الإدارة من سيرفرك
-                        allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages],
-                    },
-                    {
-                        id: interaction.guild.id, // منع الجميع من الرؤية
-                        deny: [PermissionFlagsBits.ViewChannel],
-                    },
-                    {
-                        id: interaction.user.id, // السماح لصاحب التكت
-                        allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages, PermissionFlagsBits.AttachFiles],
-                    },
-                    {
-                        id: client.user.id, // السماح للبوت
-                        allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages],
-                    },
-                    // هنا يمكنك إضافة رتبة الإدارة (Staff Role ID) ليروا التكت
-                ],
-            });
-
-            const ticketEmbed = new EmbedBuilder()
-                .setTitle('تكت جديد 🎫')
-                .setDescription(`أهلاً بك ${interaction.user}، فريق الدعم سيكون معك قريباً.\nاضغط على الزر أدناه لإغلاق التكت.`)
-                .setColor('#57f287');
-
-            const closeButton = new ActionRowBuilder()
-                .addComponents(
-                    new ButtonBuilder()
-                        .setCustomId('close_ticket')
-                        .setLabel('إغلاق التكت')
-                        .setEmoji('🔒')
-                        .setStyle(ButtonStyle.Danger),
-                );
-
-            await ticketChannel.send({ embeds: [ticketEmbed], components: [closeButton] });
-            await interaction.editReply(`تم فتح التكت الخاص بك: ${ticketChannel}`);
+        if (existingChannel) {
+            return await interaction.editReply(`لديك تكت مفتوح بالفعل: ${existingChannel}`);
         }
 
-        // كود إغلاق التكت
-        if (interaction.isButton() && interaction.customId === 'close_ticket') {
-            await interaction.reply('سيتم إغلاق التكت خلال 5 ثوانٍ...');
-            setTimeout(() => interaction.channel.delete().catch(() => null), 5000);
+        // إنشاء القناة وتحديد الصلاحيات
+        const ticketChannel = await interaction.guild.channels.create({
+            name: channelName,
+            type: ChannelType.GuildText,
+            permissionOverwrites: [
+                {
+                    id: 'ID_رتبة_الإدارة_هنا', // استبدله بـ ID رتبة الإدارة من سيرفرك
+                    allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages],
+                },
+                {
+                    id: interaction.guild.id, // منع الجميع من الرؤية
+                    deny: [PermissionFlagsBits.ViewChannel],
+                },
+                {
+                    id: interaction.user.id, // السماح لصاحب التكت
+                    allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages, PermissionFlagsBits.AttachFiles],
+                },
+                {
+                    id: client.user.id, // السماح للبوت
+                    allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages],
+                },
+                // هنا يمكنك إضافة رتبة الإدارة (Staff Role ID) ليروا التكت
+            ],
+        });
+
+        const ticketEmbed = new EmbedBuilder()
+            .setTitle('تكت جديد 🎫')
+            .setDescription(`أهلاً بك ${interaction.user}، فريق الدعم سيكون معك قريباً.\nاضغط على الزر أدناه لإغلاق التكت.`)
+            .setColor('#57f287');
+
+        const closeButton = new ActionRowBuilder()
+            .addComponents(
+                new ButtonBuilder()
+                    .setCustomId('close_ticket')
+                    .setLabel('إغلاق التكت')
+                    .setEmoji('🔒')
+                    .setStyle(ButtonStyle.Danger),
+            );
+
+        await ticketChannel.send({ embeds: [ticketEmbed], components: [closeButton] });
+        await interaction.editReply(`تم فتح التكت الخاص بك: ${ticketChannel}`);
+    }
+
+    // كود إغلاق التكت
+    if (interaction.isButton() && interaction.customId === 'close_ticket') {
+        await interaction.reply('سيتم إغلاق التكت خلال 5 ثوانٍ...');
+        setTimeout(() => interaction.channel.delete().catch(() => null), 5000);
+    }
+});
+
+
+client.on('guildMemberAdd', async (member) => {
+    console.log(`👤 عضو جديد دخل: ${member.user.tag} في سيرفر: ${member.guild.name}`);
+
+    try {
+        // سحب الإعدادات
+        const settings = await db.get(`settings_${member.guild.id}`);
+
+        if (!settings) {
+            console.log("❌ لا توجد إعدادات محفوظة لهذا السيرفر في قاعدة البيانات.");
+            return;
         }
-    });
 
+        console.log("✅ تم العثور على الإعدادات:", settings);
 
-    client.on('guildMemberAdd', async (member) => {
-        console.log(`👤 عضو جديد دخل: ${member.user.tag} في سيرفر: ${member.guild.name}`);
+        // تحديد القناة: سنعتمد على الـ ID الذي وضعته في الداشبورد (وهذا الأضمن)
+        // أو نبحث عن قناة اسمها "welcome" كخطة بديلة
+        const channelId = settings.welcomeChannelId; // تأكد أن هذا الاسم مطابق لما تحفظه في الـ API
+        const channel = member.guild.channels.cache.get(channelId) ||
+            member.guild.channels.cache.find(ch => ch.name.includes('welcome') || ch.name.includes('ترحيب'));
 
-        try {
-            // سحب الإعدادات
-            const settings = await db.get(`settings_${member.guild.id}`);
-
-            if (!settings) {
-                console.log("❌ لا توجد إعدادات محفوظة لهذا السيرفر في قاعدة البيانات.");
-                return;
-            }
-
-            console.log("✅ تم العثور على الإعدادات:", settings);
-
-            // تحديد القناة: سنعتمد على الـ ID الذي وضعته في الداشبورد (وهذا الأضمن)
-            // أو نبحث عن قناة اسمها "welcome" كخطة بديلة
-            const channelId = settings.welcomeChannelId; // تأكد أن هذا الاسم مطابق لما تحفظه في الـ API
-            const channel = member.guild.channels.cache.get(channelId) ||
-                member.guild.channels.cache.find(ch => ch.name.includes('welcome') || ch.name.includes('ترحيب'));
-
-            if (!channel) {
-                console.log("❌ لم أستطع إيجاد قناة الترحيب (تأكد من الـ ID أو اسم القناة).");
-                return;
-            }
-
-            // تجهيز الرسالة
-            let msg = settings.welcomeMessage || "أهلاً بك [user] في [server]";
-            msg = msg.replace('[user]', `${member}`)
-                .replace('[server]', `${member.guild.name}`);
-
-            await channel.send(msg);
-            console.log(`🚀 تم إرسال رسالة الترحيب بنجاح في قناة: ${channel.name}`);
-
-        } catch (error) {
-            console.error("🚨 حدث خطأ أثناء محاولة الترحيب:", error);
+        if (!channel) {
+            console.log("❌ لم أستطع إيجاد قناة الترحيب (تأكد من الـ ID أو اسم القناة).");
+            return;
         }
-    });
 
-    client.login(process.env.TOKEN);
+        // تجهيز الرسالة
+        let msg = settings.welcomeMessage || "أهلاً بك [user] في [server]";
+        msg = msg.replace('[user]', `${member}`)
+            .replace('[server]', `${member.guild.name}`);
+
+        await channel.send(msg);
+        console.log(`🚀 تم إرسال رسالة الترحيب بنجاح في قناة: ${channel.name}`);
+
+    } catch (error) {
+        console.error("🚨 حدث خطأ:", error);
+    }
+}); // إغلاق حدث guildMemberAdd أو interactionCreate
+
+client.login(process.env.TOKEN); // هذا يجب أن يكون السطر الأخير تماماً
