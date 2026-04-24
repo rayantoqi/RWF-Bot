@@ -63,9 +63,28 @@ app.get('/auth/discord/callback', passport.authenticate('discord', {
     failureRedirect: '/'
 }), (req, res) => res.redirect('/dashboard')); // سيوجهه للوحة التحكم بعد النجاح
 
+// إضافة هذا المسار في index.js لفتح صفحة الداشبورد
 app.get('/dashboard', (req, res) => {
     if (!req.isAuthenticated()) return res.redirect('/login');
-    res.send(`<h1>مرحباً ${req.user.username} في لوحة تحكم RWF</h1>`);
+    res.sendFile(path.join(__dirname, 'website', 'dashboard.html'));
+});
+
+// API لجلب سيرفرات المستخدم التي يمكنه التحكم بها
+app.get('/api/user-guilds', (req, res) => {
+    if (!req.isAuthenticated()) return res.status(401).json({ error: 'Unauthorized' });
+
+    // تصفية السيرفرات: يجب أن يكون المستخدم صاحب السيرفر أو لديه صلاحيات إدارية
+    const adminGuilds = req.user.guilds.filter(guild => (guild.permissions & 0x8) === 0x8 || (guild.permissions & 0x20) === 0x20);
+    
+    // تحديد السيرفرات التي يوجد فيها البوت حالياً
+    const guildsWithBot = adminGuilds.map(guild => {
+        return {
+            ...guild,
+            hasBot: client.guilds.cache.has(guild.id)
+        };
+    });
+
+    res.json(guildsWithBot);
 });
 
 // إنشاء العميل مع الصلاحيات اللازمة
