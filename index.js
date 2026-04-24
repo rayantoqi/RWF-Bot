@@ -117,8 +117,6 @@ app.get('/api/user-guilds', (req, res) => {
     res.json(guildsWithBot);
 });
 
-const { QuickDB } = require("quick.db");
-const db = new QuickDB();
 
 // مسار صفحة التحكم بالسيرفر
 app.get('/manage/:guildID', async (req, res) => {
