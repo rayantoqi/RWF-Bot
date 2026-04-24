@@ -1,3 +1,5 @@
+// 1. التعريفات الأساسية (مرة واحدة فقط لكل مكتبة)
+require('dotenv').config();
 const {
     Client,
     GatewayIntentBits,
@@ -8,34 +10,32 @@ const {
     EmbedBuilder,
     ChannelType,
     PermissionFlagsBits
-} = require('discord.js'); // هذه النسخة الوحيدة التي يجب أن تبقى!
-
+} = require('discord.js');
 const express = require('express');
 const session = require('express-session');
 const passport = require('passport');
 const path = require('path');
 const fs = require('fs');
 const { QuickDB } = require("quick.db");
-require('dotenv').config();
 
+// 2. إعداد التطبيق وقاعدة البيانات
 const app = express();
 const db = new QuickDB();
+const port = process.env.PORT || 8080;
 
-// 1. تعريف البوت أولاً
+// 3. تعريف الـ Client (تأكد أنه لا يوجد تعريف آخر له في الأسفل)
 const client = new Client({
     intents: [
         GatewayIntentBits.Guilds,
         GatewayIntentBits.GuildMessages,
         GatewayIntentBits.MessageContent,
         GatewayIntentBits.GuildMembers,
-    ],
-    // إضافة هذا الجزء لحل مشكلة الوقت
-    rest: {
-        offset: 0,
-        retries: 3,
-        timeout: 15000
-    }
+    ]
 });
+
+// 4. Middleware (ضروري جداً لقراءة بيانات التذاكر)
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 // 2. إعدادات الـ Session و Passport (قبل المسارات)
 app.use(session({
