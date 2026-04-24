@@ -3,49 +3,124 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RWF Bot | لوحة التحكم</title>
+    <title>RWF Bot | لوحة التحكم الذكية</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        :root { --main-color: #5865F2; --bg-dark: #0a0a0a; --card-bg: #161b22; }
-        body { background-color: var(--bg-dark); color: white; font-family: 'Cairo', sans-serif; margin: 0; display: flex; align-items: center; justify-content: center; min-height: 100vh; }
-        .container { width: 90%; max-width: 1000px; text-align: center; }
-        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-top: 40px; }
-        .card { background: var(--card-bg); padding: 25px; border-radius: 15px; border: 1px solid #30363d; transition: 0.3s; }
-        .card:hover { transform: translateY(-10px); border-color: var(--main-color); }
-        .card i { font-size: 2rem; color: var(--main-color); margin-bottom: 15px; }
-        .stat-num { font-size: 1.5rem; font-weight: bold; display: block; }
-        .btn-invite { background: var(--main-color); color: white; padding: 15px 40px; text-decoration: none; border-radius: 30px; font-weight: bold; display: inline-block; margin-top: 30px; box-shadow: 0 5px 15px rgba(88, 101, 242, 0.4); }
+        :root {
+            --main-color: #5865F2;
+            --bg-dark: #0f1216;
+            --card-bg: #1c1f26;
+            --text-gray: #b9bbbe;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: white;
+            font-family: 'Cairo', sans-serif;
+            margin: 0;
+            overflow-x: hidden;
+        }
+
+        /* Navbar */
+        nav {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px 50px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid #30363d;
+        }
+
+        .logo { font-size: 1.5rem; font-weight: bold; color: var(--main-color); }
+
+        .login-btn {
+            background: var(--main-color);
+            color: white;
+            padding: 8px 20px;
+            border-radius: 5px;
+            text-decoration: none;
+            font-weight: bold;
+            transition: 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .login-btn:hover { background: #4752c4; transform: scale(1.05); }
+
+        /* Hero Section */
+        .hero {
+            text-align: center;
+            padding: 100px 20px;
+            background: radial-gradient(circle at top, #5865f21a 0%, transparent 70%);
+        }
+
+        .hero h1 { font-size: 3rem; margin-bottom: 10px; }
+        .hero p { color: var(--text-gray); font-size: 1.2rem; margin-bottom: 30px; }
+
+        /* Stats Grid */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            max-width: 1000px;
+            margin: 0 auto 50px auto;
+            padding: 0 20px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            padding: 30px;
+            border-radius: 15px;
+            border: 1px solid #30363d;
+            text-align: center;
+            transition: 0.3s;
+        }
+
+        .card:hover { border-color: var(--main-color); transform: translateY(-5px); }
+        .card i { font-size: 2.5rem; color: var(--main-color); margin-bottom: 15px; }
+        .stat-num { font-size: 2rem; font-weight: bold; display: block; margin: 10px 0; }
+        .stat-label { color: var(--text-gray); font-size: 1rem; }
+
     </style>
 </head>
 <body>
-    <div class="container">
-        <img src="رابط_صورة_بوتك" alt="Bot Logo" style="width: 120px; border-radius: 50%; border: 4px solid var(--main-color);">
-        <h1>مرحباً بك في <span style="color: var(--main-color);">RWF Bot</span></h1>
-        <p>البوت العربي المتكامل لإدارة سيرفرك وحماية مجتمعك.</p>
+
+    <nav>
+        <div class="logo">RWF BOT</div>
+        <a href="/login" class="login-btn">
+            <i class="fab fa-discord"></i> دخول المدير
+        </a>
+    </nav>
+
+    <div class="hero">
+        <h1>تحكم في سيرفرك <span style="color: var(--main-color);">بذكاء</span></h1>
+        <p>نظام حماية متطور، تكتات سريعة، وإحصائيات مباشرة بين يديك.</p>
         
         <div class="grid">
             <div class="card">
-                <i class="fas fa-server"></i>
+                <i class="fas fa-shield-alt"></i>
                 <span class="stat-num" id="server-count">...</span>
-                <span>سيرفر</span>
+                <span class="stat-label">سيرفر محمي</span>
             </div>
             <div class="card">
                 <i class="fas fa-users"></i>
                 <span class="stat-num" id="user-count">...</span>
-                <span>مستخدم</span>
+                <span class="stat-label">مستخدم نشط</span>
             </div>
             <div class="card">
-                <i class="fas fa-bolt"></i>
+                <i class="fas fa-tachometer-alt"></i>
                 <span class="stat-num" id="ping">...</span>
-                <span>سرعة الاستجابة</span>
+                <span class="stat-label">سرعة الاستجابة</span>
             </div>
         </div>
 
-        <a href="https://discord.com/oauth2/authorize?client_id=1496507199990530058&permissions=8&integration_type=0&scope=bot+applications.commands" class="btn-invite">إضافة البوت للسيرفر</a>
+        <a href="رابط_دعوة_بوتك" class="login-btn" style="display: inline-flex; padding: 15px 40px; font-size: 1.1rem;">إضافة البوت للسيرفر</a>
     </div>
 
     <script>
-        // كود سحب البيانات من البوت تلقائياً
         async function updateStats() {
             try {
                 const response = await fetch('/api/stats');
@@ -57,7 +132,7 @@
                 console.log('Error fetching stats');
             }
         }
-        setInterval(updateStats, 5000); // تحديث كل 5 ثواني
+        setInterval(updateStats, 5000);
         updateStats();
     </script>
 </body>
