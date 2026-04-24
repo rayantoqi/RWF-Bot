@@ -18,6 +18,16 @@ app.listen(port, () => {
     console.log(`سيرفر الموقع يعمل على البورت ${port}`);
 });
 
+// في ملف index.js
+app.get('/api/stats', (req, res) => {
+    res.json({
+        servers: client.guilds.cache.size,
+        users: client.users.cache.size, // أو اجمعه من كل السيرفرات
+        status: client.user.presence.status,
+        ping: Math.round(client.ws.ping)
+    });
+});
+
 // إنشاء العميل مع الصلاحيات اللازمة
 const client = new Client({ 
     intents: [
