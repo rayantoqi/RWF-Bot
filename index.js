@@ -30,6 +30,44 @@ app.get('/api/stats', (req, res) => {
     });
 });
 
+const session = require('express-session');
+const passport = require('passport');
+const { Strategy } = require('passport-discord');
+
+// إعداد الجلسة
+app.use(session({
+    secret: 'rayan1234', // اكتب أي كلمة سر هنا
+    resave: false,
+    saveUninitialized: false,
+}));
+
+app.use(passport.initialize());
+app.use(passport.session());
+
+passport.serializeUser((user, done) => done(null, user));
+passport.deserializeUser((obj, done) => done(null, obj));
+
+// استراتيجية تسجيل الدخول
+passport.use(new Strategy({
+    clientID: process.env.CLIENT_ID,
+    clientSecret: process.env.CLIENT_SECRET, // أضف هذا في Railway Environment Variables
+    callbackURL: 'https://rwf-bot-production.up.railway.app/auth/discord/callback',
+    scope: ['identify', 'guilds']
+}, (accessToken, refreshToken, profile, done) => {
+    process.nextTick(() => done(null, profile));
+}));
+
+// روابط تسجيل الدخول
+app.get('/login', passport.authenticate('discord'));
+app.get('/auth/discord/callback', passport.authenticate('discord', {
+    failureRedirect: '/'
+}), (req, res) => res.redirect('/dashboard')); // سيوجهه للوحة التحكم بعد النجاح
+
+app.get('/dashboard', (req, res) => {
+    if (!req.isAuthenticated()) return res.redirect('/login');
+    res.send(`<h1>مرحباً ${req.user.username} في لوحة تحكم RWF</h1>`);
+});
+
 // إنشاء العميل مع الصلاحيات اللازمة
 const client = new Client({ 
     intents: [
