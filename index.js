@@ -105,15 +105,12 @@ app.get('/manage/:guildID', async (req, res) => {
 
 // API لحفظ الإعدادات من الموقع
 app.post('/api/save-settings/:guildID', express.json(), async (req, res) => {
-    if (!req.isAuthenticated()) return res.status(401).send("غير مصرح لك");
-    
-    const { welcomeMsg, ticketRoom } = req.body;
+    const { welcomeMsg, welcomeChannelId } = req.body; // تأكد من استلام الـ ID
     const guildID = req.params.guildID;
 
-    // حفظ البيانات في قاعدة البيانات
     await db.set(`settings_${guildID}`, {
         welcomeMessage: welcomeMsg,
-        ticketChannel: ticketRoom
+        welcomeChannelId: welcomeChannelId // حفظ الـ ID
     });
 
     res.json({ success: true });
