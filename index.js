@@ -197,7 +197,7 @@ if (fs.existsSync(eventsPath)) {
 }
 
 // معالجة أوامر السلاش
-client.on('interactionCreate'), async interaction => {
+client.on('interactionCreate', async (interaction) => {
     if (!interaction.isChatInputCommand()) return;
 
     const command = client.commands.get(interaction.commandName);
@@ -220,7 +220,7 @@ client.on('interactionCreate'), async interaction => {
             await interaction.reply({ content: 'حدث خطأ أثناء التنفيذ!', flags: 64 }).catch(() => null);
         }
     }
-}
+})
 const { ChannelType, PermissionFlagsBits } = require('discord.js');
 
 client.on('interactionCreate', async interaction => {
