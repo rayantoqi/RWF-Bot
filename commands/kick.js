@@ -4,17 +4,17 @@ module.exports = {
     data: new SlashCommandBuilder()
         .setName('kick')
         .setDescription('طرد عضو من السيرفر')
-        .addUserOption(option => 
+        .addUserOption(option =>
             option.setName('target')
                 .setDescription('العضو المراد طرده')
                 .setRequired(true))
-        .addStringOption(option => 
+        .addStringOption(option =>
             option.setName('reason')
                 .setDescription('السبب'))
         .setDefaultMemberPermissions(PermissionFlagsBits.KickMembers),
     async execute(interaction) {
         // 1. حجز الرد فوراً لتجنب خطأ الـ 3 ثوانٍ
-        await interaction.deferReply(); 
+        await interaction.deferReply();
 
         const user = interaction.options.getMember('target');
         const reason = interaction.options.getString('reason') || 'لا يوجد سبب محدد';

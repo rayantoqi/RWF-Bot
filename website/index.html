@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -33,7 +34,11 @@
             border-bottom: 1px solid #30363d;
         }
 
-        .logo { font-size: 1.5rem; font-weight: bold; color: var(--main-color); }
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--main-color);
+        }
 
         .login-btn {
             background: var(--main-color);
@@ -48,7 +53,10 @@
             gap: 10px;
         }
 
-        .login-btn:hover { background: #4752c4; transform: scale(1.05); }
+        .login-btn:hover {
+            background: #4752c4;
+            transform: scale(1.05);
+        }
 
         /* Hero Section */
         .hero {
@@ -57,8 +65,16 @@
             background: radial-gradient(circle at top, #5865f21a 0%, transparent 70%);
         }
 
-        .hero h1 { font-size: 3rem; margin-bottom: 10px; }
-        .hero p { color: var(--text-gray); font-size: 1.2rem; margin-bottom: 30px; }
+        .hero h1 {
+            font-size: 3rem;
+            margin-bottom: 10px;
+        }
+
+        .hero p {
+            color: var(--text-gray);
+            font-size: 1.2rem;
+            margin-bottom: 30px;
+        }
 
         /* Stats Grid */
         .grid {
@@ -79,13 +95,31 @@
             transition: 0.3s;
         }
 
-        .card:hover { border-color: var(--main-color); transform: translateY(-5px); }
-        .card i { font-size: 2.5rem; color: var(--main-color); margin-bottom: 15px; }
-        .stat-num { font-size: 2rem; font-weight: bold; display: block; margin: 10px 0; }
-        .stat-label { color: var(--text-gray); font-size: 1rem; }
+        .card:hover {
+            border-color: var(--main-color);
+            transform: translateY(-5px);
+        }
 
+        .card i {
+            font-size: 2.5rem;
+            color: var(--main-color);
+            margin-bottom: 15px;
+        }
+
+        .stat-num {
+            font-size: 2rem;
+            font-weight: bold;
+            display: block;
+            margin: 10px 0;
+        }
+
+        .stat-label {
+            color: var(--text-gray);
+            font-size: 1rem;
+        }
     </style>
 </head>
+
 <body>
 
     <nav>
@@ -98,7 +132,7 @@
     <div class="hero">
         <h1>تحكم في سيرفرك <span style="color: var(--main-color);">بذكاء</span></h1>
         <p>نظام حماية متطور، تكتات سريعة، وإحصائيات مباشرة بين يديك.</p>
-        
+
         <div class="grid">
             <div class="card">
                 <i class="fas fa-shield-alt"></i>
@@ -117,7 +151,8 @@
             </div>
         </div>
 
-        <a href="رابط_دعوة_بوتك" class="login-btn" style="display: inline-flex; padding: 15px 40px; font-size: 1.1rem;">إضافة البوت للسيرفر</a>
+        <a href="رابط_دعوة_بوتك" class="login-btn"
+            style="display: inline-flex; padding: 15px 40px; font-size: 1.1rem;">إضافة البوت للسيرفر</a>
     </div>
 
     <script>
@@ -136,4 +171,5 @@
         updateStats();
     </script>
 </body>
+
 </html>

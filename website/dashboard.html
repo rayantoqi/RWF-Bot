@@ -1,28 +1,93 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RWF | لوحة التحكم</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        :root { --main-color: #5865F2; --bg-dark: #0f1216; --card-bg: #1c1f26; }
-        body { background-color: var(--bg-dark); color: white; font-family: 'Cairo', sans-serif; margin: 0; padding: 40px; }
-        h1 { text-align: center; margin-bottom: 50px; }
-        .guilds-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; max-width: 1200px; margin: 0 auto; }
-        .guild-card { background: var(--card-bg); border-radius: 15px; padding: 20px; text-align: center; border: 1px solid #30363d; transition: 0.3s; }
-        .guild-card:hover { border-color: var(--main-color); transform: translateY(-5px); }
-        .guild-icon { width: 80px; height: 80px; border-radius: 50%; margin-bottom: 15px; background: #2f3136; }
-        .guild-name { font-size: 1.2rem; font-weight: bold; margin-bottom: 20px; display: block; }
-        .btn { padding: 10px 20px; border-radius: 5px; text-decoration: none; font-weight: bold; display: inline-block; cursor: pointer; }
-        .btn-manage { background: var(--main-color); color: white; }
-        .btn-invite { background: #3ba55c; color: white; }
+        :root {
+            --main-color: #5865F2;
+            --bg-dark: #0f1216;
+            --card-bg: #1c1f26;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: white;
+            font-family: 'Cairo', sans-serif;
+            margin: 0;
+            padding: 40px;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+
+        .guilds-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .guild-card {
+            background: var(--card-bg);
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            border: 1px solid #30363d;
+            transition: 0.3s;
+        }
+
+        .guild-card:hover {
+            border-color: var(--main-color);
+            transform: translateY(-5px);
+        }
+
+        .guild-icon {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            margin-bottom: 15px;
+            background: #2f3136;
+        }
+
+        .guild-name {
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-bottom: 20px;
+            display: block;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border-radius: 5px;
+            text-decoration: none;
+            font-weight: bold;
+            display: inline-block;
+            cursor: pointer;
+        }
+
+        .btn-manage {
+            background: var(--main-color);
+            color: white;
+        }
+
+        .btn-invite {
+            background: #3ba55c;
+            color: white;
+        }
     </style>
 </head>
+
 <body>
     <h1>اختر السيرفر للبدء في الإعدادات ⚙️</h1>
     <div class="guilds-grid" id="guilds-list">
-        </div>
+    </div>
 
     <script>
         async function loadGuilds() {
@@ -34,14 +99,15 @@
                 <div class="guild-card">
                     <img class="guild-icon" src="${guild.icon ? `https://cdn.discordapp.com/icons/${guild.id}/${guild.icon}.png` : 'https://archive.org/download/discord-v2/discord.png'}" alt="icon">
                     <span class="guild-name">${guild.name}</span>
-                    ${guild.hasBot 
-                        ? `<a href="/manage/${guild.id}" class="btn btn-manage">الإعدادات</a>` 
-                        : `<a href="https://discord.com/api/oauth2/authorize?client_id=YOUR_CLIENT_ID&permissions=8&scope=bot%20applications.commands&guild_id=${guild.id}" class="btn btn-invite">إضافة البوت</a>`
-                    }
+                    ${guild.hasBot
+                    ? `<a href="/manage/${guild.id}" class="btn btn-manage">الإعدادات</a>`
+                    : `<a href="https://discord.com/api/oauth2/authorize?client_id=YOUR_CLIENT_ID&permissions=8&scope=bot%20applications.commands&guild_id=${guild.id}" class="btn btn-invite">إضافة البوت</a>`
+                }
                 </div>
             `).join('');
         }
         loadGuilds();
     </script>
 </body>
+
 </html>
