@@ -266,7 +266,7 @@ client.on('interactionCreate', async (interaction) => {
         }
     }
 })
-const { ChannelType, PermissionFlagsBits } = require('discord.js');
+
 
 client.on('interactionCreate', async interaction => {
     // التأكد أن التفاعل هو ضغطة زر "فتح تكت"
