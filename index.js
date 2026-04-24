@@ -63,7 +63,6 @@ app.get('/api/stats', (req, res) => {
 });
 
 
-const { Strategy } = require('passport-discord');
 
 // إعداد الجلسة
 app.use(session({
