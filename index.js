@@ -1,18 +1,24 @@
-const { Client, GatewayIntentBits, Collection, ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder, ChannelType, PermissionFlagsBits } = require('discord.js');
-require('dotenv').config();
-const { Client, GatewayIntentBits, Collection } = require('discord.js');
-const fs = require('node:fs');
-const path = require('node:path');
+const {
+    Client,
+    GatewayIntentBits,
+    Collection,
+    ActionRowBuilder,
+    ButtonBuilder,
+    ButtonStyle,
+    EmbedBuilder,
+    ChannelType,
+    PermissionFlagsBits
+} = require('discord.js'); // هذه النسخة الوحيدة التي يجب أن تبقى!
 
 const express = require('express');
 const session = require('express-session');
 const passport = require('passport');
-const { Strategy } = require('passport-discord');
+const path = require('path');
+const fs = require('fs');
 const { QuickDB } = require("quick.db");
+require('dotenv').config();
 
 const app = express();
-app.use(express.json());
-const port = process.env.PORT || 3000;
 const db = new QuickDB();
 
 // 1. تعريف البوت أولاً
