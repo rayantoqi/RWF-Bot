@@ -91,6 +91,18 @@ const { QuickDB } = require("quick.db");
 const db = new QuickDB();
 
 // مسار صفحة التحكم بالسيرفر
+app.get('/manage/:guildID', async (req, res) => {
+    if (!req.isAuthenticated()) return res.redirect('/login');
+    
+    const guildID = req.params.guildID;
+    const guild = client.guilds.cache.get(guildID);
+
+    // التأكد أن البوت موجود في السيرفر وأن المستخدم أدمن هناك
+    if (!guild) return res.send("البوت ليس موجوداً في هذا السيرفر!");
+    
+    res.sendFile(path.join(__dirname, 'website', 'manage.html'));
+});
+
 app.get('/api/guild-channels/:guildID', async (req, res) => {
     if (!req.isAuthenticated()) return res.status(401).send("غير مصرح لك");
     
