@@ -4,6 +4,7 @@
   "description": "",
   "main": "index.js",
   "dependencies": {
+    "better-sqlite3": "^12.9.0",
     "discord-api-types": "^0.38.47",
     "discord-html-transcripts": "^3.2.0",
     "discord.js": "^14.26.3",
@@ -16,6 +17,7 @@
     "magic-bytes.js": "^1.13.0",
     "passport": "^0.7.0",
     "passport-discord": "^0.1.4",
+    "quick.db": "^9.1.7",
     "ts-mixer": "^6.0.4",
     "tslib": "^2.8.1",
     "undici": "^6.24.1",
