@@ -9,23 +9,17 @@
     <style>
         :root { --main: #5865F2; --bg: #0f1216; --side: #161920; --card: #1c1f26; }
         body { margin: 0; background: var(--bg); color: white; font-family: 'Cairo', sans-serif; display: flex; }
-        
-        /* Sidebar */
         .sidebar { width: 250px; background: var(--side); height: 100vh; position: fixed; border-left: 1px solid #2d3139; }
         .sidebar-header { padding: 30px; text-align: center; border-bottom: 1px solid #2d3139; }
         .sidebar-menu { padding: 20px; }
         .menu-item { padding: 15px; display: flex; align-items: center; gap: 10px; color: #b9bbbe; cursor: pointer; border-radius: 8px; transition: 0.3s; margin-bottom: 10px; }
         .menu-item:hover, .menu-item.active { background: var(--main); color: white; }
-
-        /* Main Content */
         .main-content { margin-right: 250px; padding: 40px; width: 100%; }
         .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; }
-        
         .card { background: var(--card); padding: 30px; border-radius: 15px; border: 1px solid #30363d; margin-bottom: 20px; }
         .input-group { margin-bottom: 20px; }
         label { display: block; margin-bottom: 10px; font-weight: bold; color: var(--main); }
-        select, textarea, input { width: 100%; padding: 12px; background: #2f3136; border: 1px solid #444; color: white; border-radius: 8px; font-family: 'Cairo'; }
-        
+        select, input { width: 100%; padding: 12px; background: #2f3136; border: 1px solid #444; color: white; border-radius: 8px; font-family: 'Cairo'; }
         .btn-save { background: var(--main); color: white; border: none; padding: 12px 40px; border-radius: 8px; cursor: pointer; font-weight: bold; width: 100%; font-size: 1.1rem; }
         .btn-save:hover { background: #4752c4; }
     </style>
@@ -33,70 +27,60 @@
 <body>
 
     <div class="sidebar">
-        <div class="sidebar-header">
-            <h3>RWF BOT</h3>
-        </div>
+        <div class="sidebar-header"><h3>RWF BOT</h3></div>
         <div class="sidebar-menu">
-            <div class="menu-item active"><i class="fas fa-home"></i> الإعدادات العامة</div>
-            <div class="menu-item"><i class="fas fa-shield-alt"></i> نظام الحماية</div>
-            <div class="menu-item"><i class="fas fa-ticket-alt"></i> نظام التذاكر</div>
-            <div class="menu-item"><i class="fas fa-level-up-alt"></i> الرتب والـ XP</div>
+            <div class="menu-item active"><i class="fas fa-ticket-alt"></i> نظام التذاكر</div>
             <a href="/dashboard" style="text-decoration:none; color:inherit;"><div class="menu-item"><i class="fas fa-arrow-right"></i> العودة للسيرفرات</div></a>
         </div>
     </div>
 
     <div class="main-content">
         <div class="header">
-            <h1 id="guild-name">إعدادات السيرفر</h1>
-            <img id="guild-icon" src="" style="width: 60px; border-radius: 50%;">
+            <h1 id="guild-name">إعدادات التذاكر</h1>
         </div>
 
         <div class="card">
-            <h3>🏠 نظام الترحيب</h3>
+            <h3>🎫 إرسال لوحة التذاكر (Panel)</h3>
             <div class="input-group">
-                <label>اختيار قناة الترحيب</label>
-                <select id="welcomeChannel">
-                    <option>جاري تحميل القنوات...</option>
-                </select>
+                <label>روم إرسال التذكرة:</label>
+                <select id="ticketChannel"><option>جاري تحميل القنوات...</option></select>
             </div>
             <div class="input-group">
-                <label>نص رسالة الترحيب</label>
-                <textarea id="welcomeMsg" rows="4"></textarea>
+                <label>عنوان التذكرة:</label>
+                <input type="text" id="ticketTitle" placeholder="مثلاً: فتح تذكرة دعم فني">
             </div>
+            <button class="btn-save" onclick="sendTicketPanel()" style="background: #3ba55c;">إرسال اللوحة للسيرفر 🚀</button>
         </div>
-
-        <button class="btn-save" onclick="saveSettings()">حفظ التغييرات ✅</button>
     </div>
 
     <script>
         const guildID = window.location.pathname.split('/').pop();
 
         async function init() {
-            // جلب القنوات
-            const chRes = await fetch(`/api/guild-channels/${guildID}`);
-            const channels = await chRes.json();
-            document.getElementById('welcomeChannel').innerHTML = channels.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
-
-            // جلب البيانات المحفوظة (إذا وجدت)
-            const statsRes = await fetch(`/api/guild-data/${guildID}`);
-            const data = await statsRes.json();
-            if(data.welcomeMessage) document.getElementById('welcomeMsg').value = data.welcomeMessage;
-            if(data.welcomeChannelId) document.getElementById('welcomeChannel').value = data.welcomeChannelId;
+            try {
+                // جلب القنوات ووضعها في القائمة المنسدلة
+                const res = await fetch(`/api/guild-channels/${guildID}`);
+                const channels = await res.json();
+                const select = document.getElementById('ticketChannel');
+                select.innerHTML = channels.map(ch => `<option value="${ch.id}">${ch.name}</option>`).join('');
+            } catch (e) { console.error("Error loading channels"); }
         }
 
-        async function saveSettings() {
-            const res = await fetch(`/api/save-settings/${guildID}`, {
+        async function sendTicketPanel() {
+            const channelId = document.getElementById('ticketChannel').value;
+            const title = document.getElementById('ticketTitle').value;
+
+            const res = await fetch(`/api/send-ticket-panel/${guildID}`, {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({
-                    welcomeMsg: document.getElementById('welcomeMsg').value,
-                    welcomeChannelId: document.getElementById('welcomeChannel').value
-                })
+                body: JSON.stringify({ channelId, title })
             });
-            if(res.ok) alert('تم الحفظ بنجاح! 🚀');
+            
+            if(res.ok) alert('تم إرسال لوحة التذاكر بنجاح! ✅');
+            else alert('حدث خطأ أثناء الإرسال ❌');
         }
 
-        init();
+        init(); // تشغيل الدالة عند تحميل الصفحة
     </script>
 </body>
 </html>

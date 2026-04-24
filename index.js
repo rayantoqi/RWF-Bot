@@ -4,13 +4,45 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const express = require('express');
+const session = require('express-session');
+const passport = require('passport');
+const { Strategy } = require('passport-discord');
+const { QuickDB } = require("quick.db");
+
 const app = express();
 const port = process.env.PORT || 3000;
+const db = new QuickDB();
 
+// 1. تعريف البوت أولاً
+const client = new Client({ 
+    intents: [
+        GatewayIntentBits.Guilds,
+        GatewayIntentBits.GuildMessages,
+        GatewayIntentBits.MessageContent,
+        GatewayIntentBits.GuildMembers,
+    ],
+    // إضافة هذا الجزء لحل مشكلة الوقت
+    rest: {
+        offset: 0,
+        retries: 3,
+        timeout: 15000
+    }
+});
+
+// 2. إعدادات الـ Session و Passport (قبل المسارات)
+app.use(session({
+    secret: 'rayan1234',
+    resave: false,
+    saveUninitialized: false,
+}));
+app.use(passport.initialize());
+app.use(passport.session());
+app.use(express.json()); // ضروري عشان يستقبل البيانات من الداشبورد
+app.use(express.static(path.join(__dirname, 'website')));
 
 
 // هذا السطر يخبر السيرفر أين يجد ملفات الموقع (صور، CSS، HTML)
-app.use(express.static('website'));
+app.use(express.static(path.join(__dirname, 'website')));
 
 app.get('/', (req, res) => {
     res.sendFile(__dirname + '/website/index.html');
@@ -136,20 +168,7 @@ app.post('/api/save-settings/:guildID', express.json(), async (req, res) => {
 });
 
 // إنشاء العميل مع الصلاحيات اللازمة
-const client = new Client({ 
-    intents: [
-        GatewayIntentBits.Guilds,
-        GatewayIntentBits.GuildMessages,
-        GatewayIntentBits.MessageContent,
-        GatewayIntentBits.GuildMembers,
-    ],
-    // إضافة هذا الجزء لحل مشكلة الوقت
-    rest: {
-        offset: 0,
-        retries: 3,
-        timeout: 15000
-    }
-});
+
 
 // مجموعة لتخزين الأوامر
 client.commands = new Collection();
@@ -226,6 +245,10 @@ client.on('interactionCreate', async interaction => {
             name: channelName,
             type: ChannelType.GuildText,
             permissionOverwrites: [
+                {
+                    id: 'ID_رتبة_الإدارة_هنا', // استبدله بـ ID رتبة الإدارة من سيرفرك
+                    allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages],
+                },
                 {
                     id: interaction.guild.id, // منع الجميع من الرؤية
                     deny: [PermissionFlagsBits.ViewChannel],
@@ -305,5 +328,5 @@ client.on('guildMemberAdd', async (member) => {
         console.error("🚨 حدث خطأ أثناء محاولة الترحيب:", error);
     }
 });
-});
+
 client.login(process.env.TOKEN);
