@@ -3,6 +3,21 @@ const { Client, GatewayIntentBits, Collection } = require('discord.js');
 const fs = require('node:fs');
 const path = require('node:path');
 
+const express = require('express');
+const app = express();
+const port = process.env.PORT || 3000;
+
+// هذا السطر يخبر السيرفر أين يجد ملفات الموقع (صور، CSS، HTML)
+app.use(express.static('website'));
+
+app.get('/', (req, res) => {
+    res.sendFile(__dirname + '/website/index.html');
+});
+
+app.listen(port, () => {
+    console.log(`سيرفر الموقع يعمل على البورت ${port}`);
+});
+
 // إنشاء العميل مع الصلاحيات اللازمة
 const client = new Client({ 
     intents: [
