@@ -62,7 +62,7 @@ app.get('/api/stats', (req, res) => {
     });
 });
 
-const session = require('express-session');
+
 const passport = require('passport');
 const { Strategy } = require('passport-discord');
 
