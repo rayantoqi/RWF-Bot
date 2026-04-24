@@ -252,4 +252,25 @@ client.on('interactionCreate', async interaction => {
 });
 });
 
+client.on('guildMemberAdd', async (member) => {
+    // جلب الإعدادات من قاعدة البيانات للسيرفر الذي دخل إليه العضو
+    const settings = await db.get(`settings_${member.guild.id}`);
+
+    // إذا لم يضع المدير رسالة ترحيب، لن يفعل البوت شيئاً
+    if (!settings || !settings.welcomeMessage) return;
+
+    // البحث عن قناة الترحيب (يمكنك إضافة إعداد لقناة الترحيب في الموقع أيضاً)
+    // حالياً سنحاول إرسالها في أول قناة نصية يجدها أو قناة "General"
+    const welcomeChannel = member.guild.channels.cache.find(ch => ch.name.includes('welcome') || ch.name.includes('ترحيب'));
+
+    if (welcomeChannel) {
+        // استبدال اختصارات مثل [user] باسم العضو لجعل الرسالة احترافية
+        let msg = settings.welcomeMessage
+            .replace('[user]', `${member}`)
+            .replace('[server]', `${member.guild.name}`);
+
+        welcomeChannel.send(msg);
+    }
+});
+
 client.login(process.env.TOKEN);
