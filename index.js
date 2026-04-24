@@ -117,6 +117,11 @@ app.get('/api/guild-channels/:guildID', async (req, res) => {
     res.json(channels);
 });
 
+app.get('/api/guild-data/:guildID', async (req, res) => {
+    const data = await db.get(`settings_${req.params.guildID}`) || {};
+    res.json(data);
+});
+
 // API لحفظ الإعدادات من الموقع
 app.post('/api/save-settings/:guildID', express.json(), async (req, res) => {
     const { welcomeMsg, welcomeChannelId } = req.body; // تأكد أن الاسم هنا مطابق لملف الـ HTML
