@@ -14,6 +14,7 @@ const {
 const express = require('express');
 const session = require('express-session');
 const passport = require('passport');
+const { Strategy } = require('passport-discord'); // هذا السطر هو الذي ينقصك!
 const path = require('path');
 const fs = require('fs');
 const { QuickDB } = require("quick.db");
