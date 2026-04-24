@@ -91,16 +91,18 @@ const { QuickDB } = require("quick.db");
 const db = new QuickDB();
 
 // مسار صفحة التحكم بالسيرفر
-app.get('/manage/:guildID', async (req, res) => {
-    if (!req.isAuthenticated()) return res.redirect('/login');
+app.get('/api/guild-channels/:guildID', async (req, res) => {
+    if (!req.isAuthenticated()) return res.status(401).send("غير مصرح لك");
     
-    const guildID = req.params.guildID;
-    const guild = client.guilds.cache.get(guildID);
+    const guild = client.guilds.cache.get(req.params.guildID);
+    if (!guild) return res.status(404).send("السيرفر غير موجود");
 
-    // التأكد أن البوت موجود في السيرفر وأن المستخدم أدمن هناك
-    if (!guild) return res.send("البوت ليس موجوداً في هذا السيرفر!");
-    
-    res.sendFile(path.join(__dirname, 'website', 'manage.html'));
+    // نجلب فقط القنوات النصية (Text Channels)
+    const channels = guild.channels.cache
+        .filter(ch => ch.type === 0) 
+        .map(ch => ({ id: ch.id, name: ch.name }));
+
+    res.json(channels);
 });
 
 // API لحفظ الإعدادات من الموقع

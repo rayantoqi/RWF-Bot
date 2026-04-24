@@ -21,8 +21,10 @@
     </div>
     
     <div class="form-group">
-        <label>ID قناة الترحيب:</label>
-        <input type="text" id="welcomeChannel" placeholder="أدخل ID الروم هنا">
+        <label>اختيار قناة الترحيب:</label>
+        <select id="welcomeChannel" style="width: 100%; padding: 10px; background: #2f3136; color: white; border-radius: 5px;">
+            <option value="">جاري تحميل القنوات...</option>
+        </select>
     </div>
 
     <div class="form-group">
@@ -46,6 +48,23 @@
 
             if (res.ok) alert('تم حفظ الإعدادات بنجاح!');
         }
+
+        // كود لجلب القنوات عند تحميل الصفحة
+    async function loadChannels() {
+        const guildID = window.location.pathname.split('/').pop();
+        const res = await fetch(`/api/guild-channels/${guildID}`);
+        const channels = await res.json();
+    
+        const select = document.getElementById('welcomeChannel');
+        select.innerHTML = channels.map(ch => 
+        `<option value="${ch.id}">${ch.name}</option>`
+        ).join('');
+    }
+
+// استدعاء الدالة عند فتح الصفحة
+window.onload = loadChannels;
     </script>
+
+    
 </body>
 </html>
