@@ -7,6 +7,28 @@ const express = require('express');
 const app = express();
 const port = process.env.PORT || 3000;
 
+// نظام حماية السيرفر من الحذف العشوائي
+const deletedChannels = new Map();
+
+client.on('channelDelete', async (channel) => {
+    const auditLog = await channel.guild.fetchAuditLogs({ limit: 1, type: 65 }).then(audit => audit.entries.first());
+    const executor = auditLog.executor;
+
+    if (!deletedChannels.has(executor.id)) {
+        deletedChannels.set(executor.id, []);
+    }
+
+    const userLogs = deletedChannels.get(executor.id);
+    userLogs.push(Date.now());
+
+    // لو حذف أكثر من رومتين في 10 ثوانٍ
+    if (userLogs.filter(time => Date.now() - time < 10000).length > 2) {
+        const member = await channel.guild.members.fetch(executor.id);
+        await member.roles.set([]).catch(() => null); // سحب كل الرتب
+        console.log(`⚠️ تم إيقاف محاولة تخريب من ${executor.tag}`);
+    }
+});
+
 // هذا السطر يخبر السيرفر أين يجد ملفات الموقع (صور، CSS، HTML)
 app.use(express.static('website'));
 
