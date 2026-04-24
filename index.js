@@ -73,6 +73,67 @@ client.on('interactionCreate', async interaction => {
             await interaction.reply({ content: 'حدث خطأ أثناء التنفيذ!', flags: 64 }).catch(() => null);
         }
     }
+
+const { ChannelType, PermissionFlagsBits } = require('discord.js');
+
+client.on('interactionCreate', async interaction => {
+    // التأكد أن التفاعل هو ضغطة زر "فتح تكت"
+    if (interaction.isButton() && interaction.customId === 'create_ticket') {
+        await interaction.deferReply({ ephemeral: true });
+
+        // التحقق إذا كان الشخص لديه تكت مفتوح مسبقاً (اختياري)
+        const channelName = `ticket-${interaction.user.username.toLowerCase()}`;
+        const existingChannel = interaction.guild.channels.cache.find(c => c.name === channelName);
+        
+        if (existingChannel) {
+            return await interaction.editReply(`لديك تكت مفتوح بالفعل: ${existingChannel}`);
+        }
+
+        // إنشاء القناة وتحديد الصلاحيات
+        const ticketChannel = await interaction.guild.channels.create({
+            name: channelName,
+            type: ChannelType.GuildText,
+            permissionOverwrites: [
+                {
+                    id: interaction.guild.id, // منع الجميع من الرؤية
+                    deny: [PermissionFlagsBits.ViewChannel],
+                },
+                {
+                    id: interaction.user.id, // السماح لصاحب التكت
+                    allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages, PermissionFlagsBits.AttachFiles],
+                },
+                {
+                    id: client.user.id, // السماح للبوت
+                    allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages],
+                },
+                // هنا يمكنك إضافة رتبة الإدارة (Staff Role ID) ليروا التكت
+            ],
+        });
+
+        const ticketEmbed = new EmbedBuilder()
+            .setTitle('تكت جديد 🎫')
+            .setDescription(`أهلاً بك ${interaction.user}، فريق الدعم سيكون معك قريباً.\nاضغط على الزر أدناه لإغلاق التكت.`)
+            .setColor('#57f287');
+
+        const closeButton = new ActionRowBuilder()
+            .addComponents(
+                new ButtonBuilder()
+                    .setCustomId('close_ticket')
+                    .setLabel('إغلاق التكت')
+                    .setEmoji('🔒')
+                    .setStyle(ButtonStyle.Danger),
+            );
+
+        await ticketChannel.send({ embeds: [ticketEmbed], components: [closeButton] });
+        await interaction.editReply(`تم فتح التكت الخاص بك: ${ticketChannel}`);
+    }
+
+    // كود إغلاق التكت
+    if (interaction.isButton() && interaction.customId === 'close_ticket') {
+        await interaction.reply('سيتم إغلاق التكت خلال 5 ثوانٍ...');
+        setTimeout(() => interaction.channel.delete().catch(() => null), 5000);
+    }
+});
 });
 
 client.login(process.env.TOKEN);
