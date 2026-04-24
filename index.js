@@ -250,31 +250,44 @@ client.on('interactionCreate', async interaction => {
         setTimeout(() => interaction.channel.delete().catch(() => null), 5000);
     }
 });
-});
+
 
 client.on('guildMemberAdd', async (member) => {
-    // جلب الإعدادات من قاعدة البيانات للسيرفر الذي دخل إليه العضو
-    const settings = await db.get(`settings_${member.guild.id}`);
+    console.log(`👤 عضو جديد دخل: ${member.user.tag} في سيرفر: ${member.guild.name}`);
 
-    console.log("إعدادات السيرفر هي:", settings); // سيظهر لك في Railway logs
-    
-    if (!settings) return console.log("لا توجد إعدادات لهذا السيرفر");
+    try {
+        // سحب الإعدادات
+        const settings = await db.get(`settings_${member.guild.id}`);
+        
+        if (!settings) {
+            console.log("❌ لا توجد إعدادات محفوظة لهذا السيرفر في قاعدة البيانات.");
+            return;
+        }
 
-    // إذا لم يضع المدير رسالة ترحيب، لن يفعل البوت شيئاً
-    if (!settings || !settings.welcomeMessage) return;
+        console.log("✅ تم العثور على الإعدادات:", settings);
 
-    // البحث عن قناة الترحيب (يمكنك إضافة إعداد لقناة الترحيب في الموقع أيضاً)
-    // حالياً سنحاول إرسالها في أول قناة نصية يجدها أو قناة "General"
-    const welcomeChannel = member.guild.channels.cache.find(ch => ch.name.includes('welcome') || ch.name.includes('ترحيب'));
+        // تحديد القناة: سنعتمد على الـ ID الذي وضعته في الداشبورد (وهذا الأضمن)
+        // أو نبحث عن قناة اسمها "welcome" كخطة بديلة
+        const channelId = settings.welcomeChannelId; // تأكد أن هذا الاسم مطابق لما تحفظه في الـ API
+        const channel = member.guild.channels.cache.get(channelId) || 
+                        member.guild.channels.cache.find(ch => ch.name.includes('welcome') || ch.name.includes('ترحيب'));
 
-    if (welcomeChannel) {
-        // استبدال اختصارات مثل [user] باسم العضو لجعل الرسالة احترافية
-        let msg = settings.welcomeMessage
-            .replace('[user]', `${member}`)
-            .replace('[server]', `${member.guild.name}`);
+        if (!channel) {
+            console.log("❌ لم أستطع إيجاد قناة الترحيب (تأكد من الـ ID أو اسم القناة).");
+            return;
+        }
 
-        welcomeChannel.send(msg);
+        // تجهيز الرسالة
+        let msg = settings.welcomeMessage || "أهلاً بك [user] في [server]";
+        msg = msg.replace('[user]', `${member}`)
+                 .replace('[server]', `${member.guild.name}`);
+
+        await channel.send(msg);
+        console.log(`🚀 تم إرسال رسالة الترحيب بنجاح في قناة: ${channel.name}`);
+
+    } catch (error) {
+        console.error("🚨 حدث خطأ أثناء محاولة الترحيب:", error);
     }
 });
-
+});
 client.login(process.env.TOKEN);
