@@ -256,6 +256,10 @@ client.on('guildMemberAdd', async (member) => {
     // جلب الإعدادات من قاعدة البيانات للسيرفر الذي دخل إليه العضو
     const settings = await db.get(`settings_${member.guild.id}`);
 
+    console.log("إعدادات السيرفر هي:", settings); // سيظهر لك في Railway logs
+    
+    if (!settings) return console.log("لا توجد إعدادات لهذا السيرفر");
+
     // إذا لم يضع المدير رسالة ترحيب، لن يفعل البوت شيئاً
     if (!settings || !settings.welcomeMessage) return;
 
