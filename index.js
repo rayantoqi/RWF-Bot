@@ -105,12 +105,12 @@ app.get('/manage/:guildID', async (req, res) => {
 
 // API لحفظ الإعدادات من الموقع
 app.post('/api/save-settings/:guildID', express.json(), async (req, res) => {
-    const { welcomeMsg, welcomeChannelId } = req.body; // تأكد من استلام الـ ID
+    const { welcomeMsg, welcomeChannelId } = req.body; // تأكد أن الاسم هنا مطابق لملف الـ HTML
     const guildID = req.params.guildID;
 
     await db.set(`settings_${guildID}`, {
         welcomeMessage: welcomeMsg,
-        welcomeChannelId: welcomeChannelId // حفظ الـ ID
+        welcomeChannelId: welcomeChannelId // هذا السطر هو اللي كان ناقص في قاعدة بياناتك
     });
 
     res.json({ success: true });
