@@ -154,6 +154,17 @@
             <button class="btn-save" onclick="sendTicketPanel()" style="background: #3ba55c;">إرسال اللوحة للسيرفر
                 🚀</button>
         </div>
+             <label>نوع التفاعل:</label>
+                <select id="ticketType">
+            <option value="buttons">أزرار (Buttons)</option>
+            <option value="select">قائمة منسدلة (Select Menu)</option>
+        </select>
+
+        <label>أقصى عدد تذاكر للشخص:</label>
+        <input type="number" id="ticketLimit" value="1" min="1" max="5">
+
+        <label>لون الرسالة (Hex):</label>
+        <input type="color" id="embedColor" value="#5865F2">
     </div>
 
     <script>

@@ -1,15 +1,9 @@
 // 1. التعريفات الأساسية (مرة واحدة فقط لكل مكتبة)
 require('dotenv').config();
 const {
-    Client,
-    GatewayIntentBits,
-    Collection,
-    ActionRowBuilder,
-    ButtonBuilder,
-    ButtonStyle,
-    EmbedBuilder,
-    ChannelType,
-    PermissionFlagsBits
+    Client, GatewayIntentBits, Collection, ActionRowBuilder,
+    ButtonBuilder, ButtonStyle, EmbedBuilder, ChannelType,
+    PermissionFlagsBits, StringSelectMenuBuilder
 } = require('discord.js');
 const express = require('express');
 const session = require('express-session');
@@ -58,39 +52,56 @@ app.get('/', (req, res) => {
 });
 
 // API لإرسال لوحة التذاكر من الموقع
-app.post('/api/send-ticket-panel/:guildID', express.json(), async (req, res) => {
-    if (!req.isAuthenticated()) return res.status(401).json({ error: "غير مصرح لك" });
-
-    const { channelId, title } = req.body;
-    const guildID = req.params.guildID;
-
+app.post('/api/send-ticket-panel/:guildID', async (req, res) => {
     try {
-        const guild = client.guilds.cache.get(guildID);
+        // استلام كل البيانات الجديدة من الداشبورد
+        const { channelId, title, description, type, limit, color } = req.body;
+        const guild = client.guilds.cache.get(req.params.guildID);
         if (!guild) return res.status(404).json({ error: "السيرفر غير موجود" });
 
-        const channel = await guild.channels.fetch(channelId);
-        if (!channel) return res.status(404).json({ error: "القناة غير موجودة" });
+        const channel = await guild.channels.fetch(channelId).catch(() => null);
+        if (!channel) return res.status(400).json({ error: "القناة غير موجودة" });
+
+        // تخزين الحد الأقصى والنوع في قاعدة البيانات لكل سيرفر بشكل منفصل
+        await db.set(`ticket_settings_${req.params.guildID}`, {
+            limit: parseInt(limit) || 1,
+            type: type || 'buttons'
+        });
 
         const embed = new EmbedBuilder()
             .setTitle(title || "مركز الدعم الفني")
-            .setDescription("لفتح تذكرة جديدة، يرجى الضغط على الزر أدناه 📩")
-            .setColor("#5865F2")
-            .setFooter({ text: "RWF System" });
+            .setDescription(description || "اضغط أدناه للتواصل مع الإدارة")
+            .setColor(color || "#5865F2");
 
-        const row = new ActionRowBuilder().addComponents(
-            new ButtonBuilder()
-                .setCustomId('create_ticket') // هذا يجب أن يطابق الموجود في كود الـ interactionCreate
-                .setLabel('فتح تذكرة')
-                .setEmoji('📩')
-                .setStyle(ButtonStyle.Primary),
-        );
+        let row = new ActionRowBuilder();
+
+        // التحكم في شكل اللوحة (أزرار أو قائمة)
+        if (type === 'select') {
+            row.addComponents(
+                new StringSelectMenuBuilder()
+                    .setCustomId('ticket_select')
+                    .setPlaceholder('اختر نوع التذكرة...')
+                    .addOptions([
+                        { label: 'دعم فني', value: 'tech', emoji: '🛠️' },
+                        { label: 'شكوى', value: 'report', emoji: '⚠️' },
+                        { label: 'استفسار', value: 'ask', emoji: '❓' }
+                    ])
+            );
+        } else {
+            row.addComponents(
+                new ButtonBuilder()
+                    .setCustomId('create_ticket')
+                    .setLabel('فتح تذكرة')
+                    .setEmoji('📩')
+                    .setStyle(ButtonStyle.Primary)
+            );
+        }
 
         await channel.send({ embeds: [embed], components: [row] });
         res.json({ success: true });
-
     } catch (error) {
-        console.error("Error sending ticket panel:", error);
-        res.status(500).json({ error: "فشل إرسال الرسالة إلى الديسكورد" });
+        console.error("Error in Ticket API:", error);
+        res.status(500).json({ error: "فشل الإرسال" });
     }
 });
 
@@ -271,17 +282,22 @@ client.on('interactionCreate', async (interaction) => {
 
 client.on('interactionCreate', async interaction => {
     // التأكد أن التفاعل هو ضغطة زر "فتح تكت"
-    if (interaction.isButton() && interaction.customId === 'create_ticket') {
-        await interaction.deferReply({ ephemeral: true });
+    if (interaction.customId === 'create_ticket' || interaction.customId === 'ticket_select') {
+    // جلب الإعدادات المخزنة للسيرفر
+    const settings = await db.get(`ticket_settings_${interaction.guildId}`) || { limit: 1 };
+    
+    // البحث عن التذاكر المفتوحة لهذا العضو فقط
+    const openTickets = interaction.guild.channels.cache.filter(c => 
+        c.name.startsWith('ticket-') && c.name.includes(interaction.user.username.toLowerCase())
+    ).size;
 
-        // التحقق إذا كان الشخص لديه تكت مفتوح مسبقاً (اختياري)
-        const channelName = `ticket-${interaction.user.username.toLowerCase()}`;
-        const existingChannel = interaction.guild.channels.cache.find(c => c.name === channelName);
-
-        if (existingChannel) {
-            return await interaction.editReply(`لديك تكت مفتوح بالفعل: ${existingChannel}`);
-        }
-
+    // إذا تجاوز الحد الأقصى نمنعه
+    if (openTickets >= settings.limit) {
+        return interaction.reply({ 
+            content: `❌ لا يمكنك فتح أكثر من ${settings.limit} تذكرة في هذا السيرفر.`, 
+            ephemeral: true 
+        });
+    }
         // إنشاء القناة وتحديد الصلاحيات
         const ticketChannel = await interaction.guild.channels.create({
             name: channelName,
