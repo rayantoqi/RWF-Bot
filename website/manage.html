@@ -152,18 +152,23 @@
                 <input type="text" id="ticketTitle" placeholder="مثلاً: فتح تذكرة دعم فني">
             </div>
 
-            <label>نوع التفاعل:</label>
-            <select id="ticketType">
-                <option value="buttons">أزرار (Buttons)</option>
+            <div class="input-group">
+                <label>نوع التفاعل:</label>
+                <select id="ticketType">
+                    <option value="buttons">أزرار (Buttons)</option>
                 <option value="select">قائمة منسدلة (Select Menu)</option>
-            </select>
+                </select>
+            </div>
 
-            <label>أقصى عدد تذاكر للشخص:</label>
-            <input type="number" id="ticketLimit" value="1" min="1" max="5">
+            <div class="input-group">
+                <label>أقصى عدد تذاكر للشخص:</label>
+                <input type="number" id="ticketLimit" value="1" min="1" max="5">
+            </div>
 
-            <label>لون الرسالة (Hex):</label>
-            <input type="color" id="embedColor" value="#5865F2">
-
+            <div class="input-group">
+                <label>لون الرسالة (Embed Color):</label>
+                <input type="color" id="embedColor" value="#5865F2" style="height: 50px; cursor: pointer;">
+            </div>
         </div>
         <div>
             <button class="btn-save" onclick="sendTicketPanel()" style="background: #3ba55c;">إرسال اللوحة للسيرفر
