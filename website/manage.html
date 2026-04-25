@@ -152,17 +152,17 @@
                 <input type="text" id="ticketTitle" placeholder="مثلاً: فتح تذكرة دعم فني">
             </div>
 
-                 <label>نوع التفاعل:</label>
-                <select id="ticketType">
-            <option value="buttons">أزرار (Buttons)</option>
-            <option value="select">قائمة منسدلة (Select Menu)</option>
-        </select>
+            <label>نوع التفاعل:</label>
+            <select id="ticketType">
+                <option value="buttons">أزرار (Buttons)</option>
+                <option value="select">قائمة منسدلة (Select Menu)</option>
+            </select>
 
-        <label>أقصى عدد تذاكر للشخص:</label>
-        <input type="number" id="ticketLimit" value="1" min="1" max="5">
+            <label>أقصى عدد تذاكر للشخص:</label>
+            <input type="number" id="ticketLimit" value="1" min="1" max="5">
 
-        <label>لون الرسالة (Hex):</label>
-        <input type="color" id="embedColor" value="#5865F2">
+            <label>لون الرسالة (Hex):</label>
+            <input type="color" id="embedColor" value="#5865F2">
 
         </div>
         <div>
@@ -185,19 +185,32 @@
         }
 
         async function sendTicketPanel() {
+            // 1. جلب القيم من العناصر الجديدة
             const channelId = document.getElementById('ticketChannel').value;
             const title = document.getElementById('ticketTitle').value;
+            const type = document.getElementById('ticketType').value; // النوع (أزرار أو قائمة)
+            const limit = document.getElementById('ticketLimit').value; // الحد الأقصى
+            const color = document.getElementById('embedColor').value; // اللون
 
+            // 2. إرسال كل البيانات للباك إند
             const res = await fetch(`/api/send-ticket-panel/${guildID}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ channelId, title })
+                body: JSON.stringify({
+                    channelId,
+                    title,
+                    type,
+                    limit,
+                    color
+                })
             });
 
-            if (res.ok) alert('تم إرسال لوحة التذاكر بنجاح! ✅');
-            else alert('حدث خطأ أثناء الإرسال ❌');
+            if (res.ok) {
+                alert('تم إرسال لوحة التذاكر بنجاح! ✅');
+            } else {
+                alert('حدث خطأ أثناء الإرسال ❌ تأكد أن البوت يعمل');
+            }
         }
-
         init(); // تشغيل الدالة عند تحميل الصفحة
     </script>
 </body>
