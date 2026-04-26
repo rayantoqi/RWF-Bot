@@ -345,30 +345,7 @@ client.on('interactionCreate', async interaction => {
                 ephemeral: true
             });
         }
-        // إنشاء القناة وتحديد الصلاحيات
-        const ticketChannel = await interaction.guild.channels.create({
-            name: channelName,
-            type: ChannelType.GuildText,
-            permissionOverwrites: [
-                {
-                    id: 'ID_رتبة_الإدارة_هنا', // استبدله بـ ID رتبة الإدارة من سيرفرك
-                    allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages],
-                },
-                {
-                    id: interaction.guild.id, // منع الجميع من الرؤية
-                    deny: [PermissionFlagsBits.ViewChannel],
-                },
-                {
-                    id: interaction.user.id, // السماح لصاحب التكت
-                    allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages, PermissionFlagsBits.AttachFiles],
-                },
-                {
-                    id: client.user.id, // السماح للبوت
-                    allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages],
-                },
-                // هنا يمكنك إضافة رتبة الإدارة (Staff Role ID) ليروا التكت
-            ],
-        });
+        
 
         const ticketEmbed = new EmbedBuilder()
             .setTitle('تكت جديد 🎫')
