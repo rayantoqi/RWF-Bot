@@ -55,7 +55,7 @@ app.get('/', (req, res) => {
 app.post('/api/send-ticket-panel/:guildID', async (req, res) => {
     try {
         // استلام كل البيانات الجديدة من الداشبورد
-        const { channelId, title, description, type, limit, color } = req.body;
+        const { channelId, title, description, type, limit, color, mcRole, discordRole } = req.body;
         const guild = client.guilds.cache.get(req.params.guildID);
         if (!guild) return res.status(404).json({ error: "السيرفر غير موجود" });
 
