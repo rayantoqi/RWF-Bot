@@ -1,7 +1,7 @@
 {
   "name": "discord_bot",
-  "version": "1.0.0",
-  "description": "",
+  "version": "3.0.0",
+  "description": "RWF Bot - بوت ديسكورد متكامل",
   "main": "index.js",
   "dependencies": {
     "better-sqlite3": "^12.9.0",
@@ -26,9 +26,11 @@
   },
   "scripts": {
     "start": "node index.js",
+    "deploy": "node deploy-commands.js",
+    "dev": "nodemon index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": ["discord", "bot", "discord.js"],
+  "author": "RWF",
   "license": "ISC"
 }

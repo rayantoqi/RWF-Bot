@@ -1,113 +1,391 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RWF | لوحة التحكم</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <title>RWF Dashboard | لوحة التحكم المتقدمة</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
-            --main-color: #5865F2;
-            --bg-dark: #0f1216;
-            --card-bg: #1c1f26;
+            --primary: #5865f2;
+            --primary-dark: #4752c4;
+            --success: #57f287;
+            --danger: #ed4245;
+            --warning: #faa61a;
+            --bg-primary: #36393f;
+            --bg-secondary: #2f3136;
+            --bg-tertiary: #202225;
+            --text-primary: #dcddde;
+            --text-muted: #72767d;
+            --border: #40444b;
+            --shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
 
         body {
-            background-color: var(--bg-dark);
-            color: white;
             font-family: 'Cairo', sans-serif;
-            margin: 0;
-            padding: 40px;
+            background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+            color: var(--text-primary);
+            min-height: 100vh;
+            padding: 20px;
         }
 
-        h1 {
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* Header */
+        .header {
             text-align: center;
-            margin-bottom: 50px;
+            margin-bottom: 40px;
+            padding: 30px;
+            background: var(--bg-tertiary);
+            border-radius: 20px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+        }
+
+        .logo {
+            font-size: 2.5rem;
+            background: linear-gradient(45deg, var(--primary), var(--success));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+
+        .stat-card {
+            background: var(--bg-secondary);
+            padding: 15px 25px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            text-align: center;
+            min-width: 120px;
+        }
+
+        .stat-number {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        /* Guilds Grid */
+        .guilds-section {
+            margin-bottom: 40px;
+        }
+
+        .section-title {
+            font-size: 1.8rem;
+            margin-bottom: 25px;
+            text-align: center;
+            color: var(--text-primary);
+            position: relative;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            height: 3px;
+            background: var(--primary);
+            border-radius: 2px;
         }
 
         .guilds-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 20px;
-            max-width: 1200px;
-            margin: 0 auto;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 25px;
         }
 
         .guild-card {
-            background: var(--card-bg);
-            border-radius: 15px;
-            padding: 20px;
+            background: var(--bg-secondary);
+            border-radius: 20px;
+            padding: 25px;
             text-align: center;
-            border: 1px solid #30363d;
-            transition: 0.3s;
+            border: 2px solid transparent;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .guild-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary), var(--success));
+            transform: scaleX(0);
+            transition: transform 0.4s ease;
         }
 
         .guild-card:hover {
-            border-color: var(--main-color);
-            transform: translateY(-5px);
+            border-color: var(--primary);
+            transform: translateY(-10px);
+            box-shadow: var(--shadow);
+        }
+
+        .guild-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .guild-card.has-bot {
+            border-color: var(--success);
+        }
+
+        .guild-card.has-bot::before {
+            background: var(--success);
         }
 
         .guild-icon {
-            width: 80px;
-            height: 80px;
+            width: 90px;
+            height: 90px;
             border-radius: 50%;
-            margin-bottom: 15px;
-            background: #2f3136;
+            margin: 0 auto 20px;
+            background: var(--bg-primary);
+            border: 3px solid var(--border);
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+
+        .guild-card:hover .guild-icon {
+            border-color: var(--primary);
+            transform: scale(1.05);
         }
 
         .guild-name {
-            font-size: 1.2rem;
-            font-weight: bold;
+            font-size: 1.4rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: var(--text-primary);
+            word-break: break-word;
+        }
+
+        .guild-members {
+            color: var(--text-muted);
+            font-size: 0.9rem;
             margin-bottom: 20px;
-            display: block;
         }
 
         .btn {
-            padding: 10px 20px;
-            border-radius: 5px;
+            padding: 12px 24px;
+            border-radius: 12px;
             text-decoration: none;
-            font-weight: bold;
-            display: inline-block;
+            font-weight: 600;
+            font-size: 0.95rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+            border: none;
             cursor: pointer;
+            font-family: inherit;
         }
 
         .btn-manage {
-            background: var(--main-color);
+            background: linear-gradient(45deg, var(--primary), var(--primary-dark));
             color: white;
+            box-shadow: 0 4px 15px rgba(88, 101, 242, 0.4);
+        }
+
+        .btn-manage:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(88, 101, 242, 0.6);
         }
 
         .btn-invite {
-            background: #3ba55c;
+            background: linear-gradient(45deg, var(--success), #47d86f);
             color: white;
+            box-shadow: 0 4px 15px rgba(87, 242, 135, 0.4);
+        }
+
+        .btn-invite:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(87, 242, 135, 0.6);
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid var(--bg-primary);
+            border-top: 3px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error {
+            background: rgba(237, 66, 69, 0.2);
+            border: 1px solid var(--danger);
+            color: var(--danger);
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        @media (max-width: 768px) {
+            body { padding: 10px; }
+            .stats { gap: 15px; }
+            .guilds-grid { grid-template-columns: 1fr; }
+            .stat-card { min-width: 100px; }
         }
     </style>
 </head>
 
 <body>
-    <h1>اختر السيرفر للبدء في الإعدادات ⚙️</h1>
-    <div class="guilds-grid" id="guilds-list">
+    <div class="container">
+        <!-- Header مع الإحصائيات -->
+        <div class="header">
+            <i class="logo fas fa-robot"></i>
+            <h1>RWF Dashboard v2.0</h1>
+            <p>لوحة تحكم متقدمة لإدارة البوت في سيرفراتك</p>
+            
+            <div class="stats" id="stats-container">
+                <!-- سيتم ملؤها ديناميكياً -->
+            </div>
+        </div>
+
+        <!-- قائمة السيرفرات -->
+        <div class="guilds-section">
+            <h2 class="section-title">
+                <i class="fas fa-server"></i> 
+                سيرفراتك المتاحة
+            </h2>
+            <div class="guilds-grid" id="guilds-list">
+                <div class="guild-card loading-card">
+                    <div class="loading"></div>
+                    <p>جاري تحميل السيرفرات...</p>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script>
-        async function loadGuilds() {
-            const res = await fetch('/api/user-guilds');
-            const guilds = await res.json();
-            const list = document.getElementById('guilds-list');
-
-            list.innerHTML = guilds.map(guild => `
-                <div class="guild-card">
-                    <img class="guild-icon" src="${guild.icon ? `https://cdn.discordapp.com/icons/${guild.id}/${guild.icon}.png` : 'https://archive.org/download/discord-v2/discord.png'}" alt="icon">
-                    <span class="guild-name">${guild.name}</span>
-                    ${guild.hasBot
-                    ? `<a href="/manage/${guild.id}" class="btn btn-manage">الإعدادات</a>`
-                    : `<a href="https://discord.com/api/oauth2/authorize?client_id=YOUR_CLIENT_ID&permissions=8&scope=bot%20applications.commands&guild_id=${guild.id}" class="btn btn-invite">إضافة البوت</a>`
-                }
-                </div>
-            `).join('');
+        // تحميل الإحصائيات
+        async function loadStats() {
+            try {
+                const res = await fetch('/api/stats');
+                const stats = await res.json();
+                const container = document.getElementById('stats-container');
+                
+                container.innerHTML = `
+                    <div class="stat-card">
+                        <div class="stat-number">${stats.servers}</div>
+                        <div>سيرفر</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">${stats.users?.toLocaleString() || '---'}</div>
+                        <div>عضو</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">${stats.ping}ms</div>
+                        <div>بينج</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">${Math.floor(stats.uptime / 1000)}s</div>
+                        <div>تشغيل</div>
+                    </div>
+                `;
+            } catch (error) {
+                console.error('خطأ في تحميل الإحصائيات:', error);
+            }
         }
-        loadGuilds();
+
+        // تحميل السيرفرات
+        async function loadGuilds() {
+            try {
+                const res = await fetch('/api/user-guilds');
+                if (res.status === 401) {
+                    window.location.href = '/login';
+                    return;
+                }
+                
+                const guilds = await res.json();
+                const list = document.getElementById('guilds-list');
+                
+                if (guilds.length === 0) {
+                    list.innerHTML = `
+                        <div class="error">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            <p>لا تملك صلاحيات إدارية في أي سيرفر!</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                list.innerHTML = guilds.map(guild => {
+                    const icon = guild.icon 
+                        ? `https://cdn.discordapp.com/icons/${guild.id}/${guild.icon}.png?size=128`
+                        : 'https://cdn.discordapp.com/embed/avatars/0.png';
+                    
+                    const inviteUrl = `https://discord.com/api/oauth2/authorize?client_id=${import.meta.env.VITE_CLIENT_ID || 'YOUR_CLIENT_ID'}&permissions=8&scope=bot%20applications.commands&guild_id=${guild.id}`;
+                    
+                    return `
+                        <div class="guild-card ${guild.hasBot ? 'has-bot' : ''}">
+                            <img class="guild-icon" src="${icon}" alt="${guild.name}" 
+                                 onerror="this.src='https://cdn.discordapp.com/embed/avatars/0.png'">
+                            <div class="guild-name">${guild.name}</div>
+                            <div class="guild-members">
+                                <i class="fas fa-users"></i> 
+                                ${guild.approximate_member_count?.toLocaleString() || '---'} عضو
+                            </div>
+                            ${guild.hasBot 
+                                ? `<a href="/manage/${guild.id}" class="btn btn-manage">
+                                    <i class="fas fa-cogs"></i> الإعدادات
+                                  </a>`
+                                : `<a href="${inviteUrl}" class="btn btn-invite" target="_blank">
+                                    <i class="fas fa-plus"></i> إضافة البوت
+                                  </a>`
+                            }
+                        </div>
+                    `;
+                }).join('');
+                
+            } catch (error) {
+                console.error('خطأ في تحميل السيرفرات:', error);
+                document.getElementById('guilds-list').innerHTML = `
+                    <div class="error">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <p>فشل تحميل السيرفرات! تحقق من الاتصال.</p>
+                    </div>
+                `;
+            }
+        }
+
+        // تشغيل عند تحميل الصفحة
+        window.addEventListener('load', () => {
+            loadStats();
+            loadGuilds();
+        });
+
+        // تحديث الإحصائيات كل 30 ثانية
+        setInterval(loadStats, 30000);
     </script>
 </body>
-
 </html>

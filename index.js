@@ -1,5 +1,10 @@
-// 1. التعريفات الأساسية (مرة واحدة فقط لكل مكتبة)
+// ═══════════════════════════════════════════════════════════════════════════════
+// 📁 index.js - البوت الرئيسي (RWF Bot v3.0)
+// ═══════════════════════════════════════════════════════════════════════════════
+
+// 1. التعريفات الأساسية
 require('dotenv').config();
+const config = require('./config');
 const {
     Client, GatewayIntentBits, Collection, ActionRowBuilder,
     ButtonBuilder, ButtonStyle, EmbedBuilder, ChannelType,
@@ -8,79 +13,164 @@ const {
 const express = require('express');
 const session = require('express-session');
 const passport = require('passport');
-const { Strategy } = require('passport-discord'); // هذا السطر هو الذي ينقصك!
+const { Strategy } = require('passport-discord');
 const path = require('path');
 const fs = require('fs');
-const { QuickDB } = require("quick.db");
+const { QuickDB } = require('quick.db');
 
 // 2. إعداد التطبيق وقاعدة البيانات
 const app = express();
 const db = new QuickDB();
-const port = process.env.PORT || 8080;
+const port = config.website.port;
 
-// 3. تعريف الـ Client (تأكد أنه لا يوجد تعريف آخر له في الأسفل)
+// 3. تعريف الـ Client
 const client = new Client({
     intents: [
         GatewayIntentBits.Guilds,
         GatewayIntentBits.GuildMessages,
         GatewayIntentBits.MessageContent,
         GatewayIntentBits.GuildMembers,
+        GatewayIntentBits.GuildVoiceStates,
     ]
 });
 
-// 4. Middleware (ضروري جداً لقراءة بيانات التذاكر)
+// 4. Middleware (مرة واحدة فقط)
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-
-// 2. إعدادات الـ Session و Passport (قبل المسارات)
 app.use(session({
-    secret: 'rayan1234',
+    secret: config.website.sessionSecret,
     resave: false,
     saveUninitialized: false,
 }));
 app.use(passport.initialize());
 app.use(passport.session());
-app.use(express.json()); // ضروري عشان يستقبل البيانات من الداشبورد
 app.use(express.static(path.join(__dirname, 'website')));
 
+// 5. إعداد Passport Discord
+passport.serializeUser((user, done) => done(null, user));
+passport.deserializeUser((obj, done) => done(null, obj));
 
-// هذا السطر يخبر السيرفر أين يجد ملفات الموقع (صور، CSS، HTML)
-app.use(express.static(path.join(__dirname, 'website')));
+passport.use(new Strategy({
+    clientID: config.bot.clientId,
+    clientSecret: config.bot.clientSecret,
+    callbackURL: config.website.callbackURL,
+    scope: ['identify', 'guilds']
+}, (accessToken, refreshToken, profile, done) => {
+    process.nextTick(() => done(null, profile));
+}));
 
+// ═══════════════════════════════════════════════════════════════════════════════
+// 🌐 مسارات الموقع (Routes)
+// ═══════════════════════════════════════════════════════════════════════════════
+
+// الصفحة الرئيسية
 app.get('/', (req, res) => {
-    res.sendFile(__dirname + '/website/index.html');
+    res.sendFile(path.join(__dirname, 'website', 'index.html'));
 });
 
-// API لإرسال لوحة التذاكر من الموقع
+// تسجيل الدخول
+app.get('/login', passport.authenticate('discord'));
+app.get('/auth/discord/callback', passport.authenticate('discord', {
+    failureRedirect: '/'
+}), (req, res) => res.redirect('/dashboard'));
+
+// الداشبورد
+app.get('/dashboard', (req, res) => {
+    if (!req.isAuthenticated()) return res.redirect('/login');
+    res.sendFile(path.join(__dirname, 'website', 'dashboard.html'));
+});
+
+// صفحة إدارة السيرفر
+app.get('/manage/:guildID', async (req, res) => {
+    if (!req.isAuthenticated()) return res.redirect('/login');
+    const guild = client.guilds.cache.get(req.params.guildID);
+    if (!guild) return res.status(404).send('البوت ليس موجوداً في هذا السيرفر!');
+    res.sendFile(path.join(__dirname, 'website', 'manage.html'));
+});
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// 🔌 API Routes
+// ═══════════════════════════════════════════════════════════════════════════════
+
+// إحصائيات البوت
+app.get('/api/stats', (req, res) => {
+    res.json({
+        servers: client.guilds.cache.size,
+        users: client.guilds.cache.reduce((a, g) => a + g.memberCount, 0),
+        status: client.user?.presence?.status || 'online',
+        ping: Math.round(client.ws.ping),
+        uptime: Math.floor(process.uptime())
+    });
+});
+
+// سيرفرات المستخدم
+app.get('/api/user-guilds', (req, res) => {
+    if (!req.isAuthenticated()) return res.status(401).json({ error: 'Unauthorized' });
+    const adminGuilds = req.user.guilds.filter(guild => 
+        (guild.permissions & 0x8) === 0x8 || (guild.permissions & 0x20) === 0x20
+    );
+    const guildsWithBot = adminGuilds.map(guild => ({
+        ...guild,
+        hasBot: client.guilds.cache.has(guild.id)
+    }));
+    res.json(guildsWithBot);
+});
+
+// قنوات السيرفر
+app.get('/api/guild-channels/:guildID', async (req, res) => {
+    if (!req.isAuthenticated()) return res.status(401).send('غير مصرح لك');
+    const guild = client.guilds.cache.get(req.params.guildID);
+    if (!guild) return res.status(404).send('السيرفر غير موجود');
+    const channels = guild.channels.cache
+        .filter(ch => ch.type === ChannelType.GuildText)
+        .map(ch => ({ id: ch.id, name: ch.name }));
+    res.json(channels);
+});
+
+// بيانات السيرفر
+app.get('/api/guild-data/:guildID', async (req, res) => {
+    const data = await db.get(`settings_${req.params.guildID}`) || {};
+    res.json(data);
+});
+
+// حفظ الإعدادات
+app.post('/api/save-settings/:guildID', async (req, res) => {
+    const { welcomeMsg, welcomeChannelId } = req.body;
+    const guildID = req.params.guildID;
+    await db.set(`settings_${guildID}`, {
+        welcomeMessage: welcomeMsg,
+        welcomeChannelId: welcomeChannelId
+    });
+    res.json({ success: true });
+});
+
+// إرسال لوحة التذاكر
 app.post('/api/send-ticket-panel/:guildID', async (req, res) => {
     try {
-        // استلام كل البيانات الجديدة من الداشبورد
         const { channelId, title, description, type, limit, color, mcRole, discordRole } = req.body;
         const guild = client.guilds.cache.get(req.params.guildID);
-        if (!guild) return res.status(404).json({ error: "السيرفر غير موجود" });
+        if (!guild) return res.status(404).json({ error: 'السيرفر غير موجود' });
 
         const channel = await guild.channels.fetch(channelId).catch(() => null);
-        if (!channel) return res.status(400).json({ error: "القناة غير موجودة" });
+        if (!channel) return res.status(400).json({ error: 'القناة غير موجودة' });
 
-        // تخزين الحد الأقصى والنوع في قاعدة البيانات لكل سيرفر بشكل منفصل
         await db.set(`ticket_settings_${req.params.guildID}`, {
             limit: parseInt(limit) || 1,
             type: type || 'buttons'
         });
 
         await db.set(`ticket_roles_${req.params.guildID}`, {
-            tech: mcRole,     // رتبة الماين كرافت للقسم الفني
-            report: discordRole, // رتبة الديسكورد للشكاوى
-            ask: discordRole     // رتبة الديسكورد للاستفسارات
+            tech: mcRole,
+            report: discordRole,
+            ask: discordRole
         });
+
         const embed = new EmbedBuilder()
-            .setTitle(title || "مركز الدعم الفني")
-            .setDescription(description || "اضغط أدناه للتواصل مع الإدارة")
-            .setColor(color || "#5865F2");
+            .setTitle(title || 'مركز الدعم الفني')
+            .setDescription(description || 'اضغط أدناه للتواصل مع الإدارة')
+            .setColor(color || '#5865F2');
 
         let row = new ActionRowBuilder();
-
-        // التحكم في شكل اللوحة (أزرار أو قائمة)
         if (type === 'select') {
             row.addComponents(
                 new StringSelectMenuBuilder()
@@ -105,145 +195,61 @@ app.post('/api/send-ticket-panel/:guildID', async (req, res) => {
         await channel.send({ embeds: [embed], components: [row] });
         res.json({ success: true });
     } catch (error) {
-        console.error("Error in Ticket API:", error);
-        res.status(500).json({ error: "فشل الإرسال" });
+        console.error('Error in Ticket API:', error);
+        res.status(500).json({ error: 'فشل الإرسال' });
     }
 });
 
+// تشغيل السيرفر
 app.listen(port, () => {
-    console.log(`سيرفر الموقع يعمل على البورت ${port}`);
+    console.log(`🌐 سيرفر الموقع يعمل على البورت ${port}`);
 });
 
-// في ملف index.js
-app.get('/api/stats', (req, res) => {
-    res.json({
-        servers: client.guilds.cache.size,
-        users: client.users.cache.size, // أو اجمعه من كل السيرفرات
-        status: client.user.presence.status,
-        ping: Math.round(client.ws.ping)
-    });
-});
+// ═══════════════════════════════════════════════════════════════════════════════
+// 🤖 إعداد البوت (Discord Bot)
+// ═══════════════════════════════════════════════════════════════════════════════
 
-
-
-// إعداد الجلسة
-app.use(session({
-    secret: 'rayan1234', // اكتب أي كلمة سر هنا
-    resave: false,
-    saveUninitialized: false,
-}));
-
-app.use(passport.initialize());
-app.use(passport.session());
-
-passport.serializeUser((user, done) => done(null, user));
-passport.deserializeUser((obj, done) => done(null, obj));
-
-// استراتيجية تسجيل الدخول
-passport.use(new Strategy({
-    clientID: process.env.CLIENT_ID,
-    clientSecret: process.env.CLIENT_SECRET, // أضف هذا في Railway Environment Variables
-    callbackURL: 'https://rwf-bot-production.up.railway.app/auth/discord/callback',
-    scope: ['identify', 'guilds']
-}, (accessToken, refreshToken, profile, done) => {
-    process.nextTick(() => done(null, profile));
-}));
-
-// روابط تسجيل الدخول
-app.get('/login', passport.authenticate('discord'));
-app.get('/auth/discord/callback', passport.authenticate('discord', {
-    failureRedirect: '/'
-}), (req, res) => res.redirect('/dashboard')); // سيوجهه للوحة التحكم بعد النجاح
-
-// إضافة هذا المسار في index.js لفتح صفحة الداشبورد
-app.get('/dashboard', (req, res) => {
-    if (!req.isAuthenticated()) return res.redirect('/login');
-    res.sendFile(path.join(__dirname, 'website', 'dashboard.html'));
-});
-
-// API لجلب سيرفرات المستخدم التي يمكنه التحكم بها
-app.get('/api/user-guilds', (req, res) => {
-    if (!req.isAuthenticated()) return res.status(401).json({ error: 'Unauthorized' });
-
-    // تصفية السيرفرات: يجب أن يكون المستخدم صاحب السيرفر أو لديه صلاحيات إدارية
-    const adminGuilds = req.user.guilds.filter(guild => (guild.permissions & 0x8) === 0x8 || (guild.permissions & 0x20) === 0x20);
-
-    // تحديد السيرفرات التي يوجد فيها البوت حالياً
-    const guildsWithBot = adminGuilds.map(guild => {
-        return {
-            ...guild,
-            hasBot: client.guilds.cache.has(guild.id)
-        };
-    });
-
-    res.json(guildsWithBot);
-});
-
-
-// مسار صفحة التحكم بالسيرفر
-app.get('/manage/:guildID', async (req, res) => {
-    if (!req.isAuthenticated()) return res.redirect('/login');
-
-    const guildID = req.params.guildID;
-    const guild = client.guilds.cache.get(guildID);
-
-    // التأكد أن البوت موجود في السيرفر وأن المستخدم أدمن هناك
-    if (!guild) return res.send("البوت ليس موجوداً في هذا السيرفر!");
-
-    res.sendFile(path.join(__dirname, 'website', 'manage.html'));
-});
-
-app.get('/api/guild-channels/:guildID', async (req, res) => {
-    if (!req.isAuthenticated()) return res.status(401).send("غير مصرح لك");
-
-    const guild = client.guilds.cache.get(req.params.guildID);
-    if (!guild) return res.status(404).send("السيرفر غير موجود");
-
-    // نجلب فقط القنوات النصية (Text Channels)
-    const channels = guild.channels.cache
-        .filter(ch => ch.type === 0)
-        .map(ch => ({ id: ch.id, name: ch.name }));
-
-    res.json(channels);
-});
-
-app.get('/api/guild-data/:guildID', async (req, res) => {
-    const data = await db.get(`settings_${req.params.guildID}`) || {};
-    res.json(data);
-});
-
-// API لحفظ الإعدادات من الموقع
-app.post('/api/save-settings/:guildID', express.json(), async (req, res) => {
-    const { welcomeMsg, welcomeChannelId } = req.body; // تأكد أن الاسم هنا مطابق لملف الـ HTML
-    const guildID = req.params.guildID;
-
-    await db.set(`settings_${guildID}`, {
-        welcomeMessage: welcomeMsg,
-        welcomeChannelId: welcomeChannelId // هذا السطر هو اللي كان ناقص في قاعدة بياناتك
-    });
-
-    res.json({ success: true });
-});
-
-// إنشاء العميل مع الصلاحيات اللازمة
-
-
-// مجموعة لتخزين الأوامر
+// مجموعات التخزين
 client.commands = new Collection();
+client.buttons = new Collection();
+client.selectMenus = new Collection();
+client.modals = new Collection();
 
-// قراءة ملفات الأوامر من مجلد commands
-const commandsPath = path.join(__dirname, 'commands');
-const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.js'));
+// ═══════════════════════════════════════════════════════════════════════════════
+// 📂 تحميل الأوامر (من المجلدات الفرعية)
+// ═══════════════════════════════════════════════════════════════════════════════
+function loadCommands(dir) {
+    const commandsPath = path.join(__dirname, dir);
+    if (!fs.existsSync(commandsPath)) return;
 
-for (const file of commandFiles) {
-    const filePath = path.join(commandsPath, file);
-    const command = require(filePath);
-    if ('data' in command && 'execute' in command) {
-        client.commands.set(command.data.name, command);
+    const items = fs.readdirSync(commandsPath);
+    for (const item of items) {
+        const itemPath = path.join(commandsPath, item);
+        const stat = fs.statSync(itemPath);
+        if (stat.isDirectory()) {
+            loadCommands(path.join(dir, item));
+        } else if (item.endsWith('.js')) {
+            try {
+                delete require.cache[require.resolve(itemPath)];
+                const command = require(itemPath);
+                if ('data' in command && 'execute' in command) {
+                    client.commands.set(command.data.name, command);
+                    console.log(`✅ أمر محمل: /${command.data.name}`);
+                } else {
+                    console.warn(`⚠️ ملف مفقود data أو execute: ${itemPath}`);
+                }
+            } catch (error) {
+                console.error(`❌ خطأ في تحميل ${itemPath}:`, error.message);
+            }
+        }
     }
 }
 
-// قراءة ملفات الأحداث من مجلد events (مثل ready.js)
+loadCommands('commands');
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// 📂 تحميل الأحداث
+// ═══════════════════════════════════════════════════════════════════════════════
 const eventsPath = path.join(__dirname, 'events');
 if (fs.existsSync(eventsPath)) {
     const eventFiles = fs.readdirSync(eventsPath).filter(file => file.endsWith('.js'));
@@ -251,61 +257,59 @@ if (fs.existsSync(eventsPath)) {
         const filePath = path.join(eventsPath, file);
         const event = require(filePath);
         if (event.once) {
-            client.once(event.name, (...args) => event.execute(...args));
+            client.once(event.name, (...args) => event.execute(...args, db));
         } else {
-            client.on(event.name, (...args) => event.execute(...args));
+            client.on(event.name, (...args) => event.execute(...args, db));
         }
     }
 }
 
-// معالجة أوامر السلاش
-client.on('interactionCreate', async (interaction) => {
-    if (!interaction.isChatInputCommand()) return;
+// ═══════════════════════════════════════════════════════════════════════════════
+// 📂 تحميل معالجات الأزرار والقوائم
+// ═══════════════════════════════════════════════════════════════════════════════
+function loadHandlers(dir, collection) {
+    const handlersPath = path.join(__dirname, dir);
+    if (!fs.existsSync(handlersPath)) return;
 
-    const command = client.commands.get(interaction.commandName);
-    if (!command) return;
-
-    // إضافة انتظار بسيط (200ms) للتأكد من جاهزية التفاعل
-    const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms));
-
-    try {
-        await wait(200); // انتظر قليلاً قبل البدء
-        console.log(`🚀 جاري تنفيذ: ${interaction.commandName}`);
-        await command.execute(interaction);
-    } catch (error) {
-        if (error.code === 10062) return; // تجاهل الخطأ إذا انتهى الوقت
-        console.error(error);
-        // التحقق إذا كان التفاعل لا يزال متاحاً للرد
-        if (interaction.replied || interaction.deferred) {
-            await interaction.editReply({ content: 'حدث خطأ أثناء التنفيذ!', flags: 64 }).catch(() => null);
-        } else {
-            await interaction.reply({ content: 'حدث خطأ أثناء التنفيذ!', flags: 64 }).catch(() => null);
+    const files = fs.readdirSync(handlersPath).filter(file => file.endsWith('.js'));
+    for (const file of files) {
+        const filePath = path.join(handlersPath, file);
+        const handlers = require(filePath);
+        if (Array.isArray(handlers)) {
+            for (const handler of handlers) {
+                if (handler.customId && handler.execute) {
+                    collection.set(handler.customId, handler);
+                    console.log(`✅ معالج محمل: ${handler.customId}`);
+                }
+            }
         }
     }
-});
+}
 
+loadHandlers('handlers', client.buttons);
 
+// ═══════════════════════════════════════════════════════════════════════════════
+// 🎫 معالجة التذاكر المباشرة في index.js (للتوافق مع الأزرار القديمة)
+// ═══════════════════════════════════════════════════════════════════════════════
 client.on('interactionCreate', async (interaction) => {
-    // نوقف الكود لو ما كان ضغطة زر أو قائمة منسدلة
     if (!interaction.isButton() && !interaction.isStringSelectMenu()) return;
 
-    // --- 1. فتح التذكرة ---
+    // فتح التذكرة
     if (interaction.customId === 'create_ticket' || interaction.customId === 'ticket_select') {
         const settings = await db.get(`ticket_settings_${interaction.guildId}`) || { limit: 1 };
         const selectedType = interaction.isStringSelectMenu() ? interaction.values[0] : 'general';
         const roles = await db.get(`ticket_roles_${interaction.guildId}`);
-
-        let adminRoleID = null;
-        if (roles) {
-            adminRoleID = roles[selectedType] || roles['general'];
-        }
+        const adminRoleID = roles?.[selectedType] || roles?.general || null;
 
         const openTickets = interaction.guild.channels.cache.filter(c =>
             c.name.startsWith('ticket-') && c.name.includes(interaction.user.username.toLowerCase())
         ).size;
 
         if (openTickets >= settings.limit) {
-            return interaction.reply({ content: `❌ لا يمكنك فتح أكثر من ${settings.limit} تذكرة.`, ephemeral: true });
+            return interaction.reply({ 
+                content: `❌ لا يمكنك فتح أكثر من ${settings.limit} تذكرة.`, 
+                ephemeral: true 
+            });
         }
 
         const ticketChannel = await interaction.guild.channels.create({
@@ -319,19 +323,19 @@ client.on('interactionCreate', async (interaction) => {
         });
 
         const ticketEmbed = new EmbedBuilder()
-            .setTitle("نظام تذاكر RWFMC")
-            .setDescription(`مرحباً ${interaction.user}\nتم فتح تذكرة بخصوص: **${selectedType}**`)
-            .addFields({ name: "حالة التذكرة", value: "⏳ في انتظار الاستلام (Unclaimed)", inline: true })
-            .setColor("#5865F2");
+            .setTitle('🎫 نـظـام تـذاكـر RWF')
+            .setDescription(`مرحباً ${interaction.user}!\nتم فتح تذكرة جديدة.`)
+            .addFields({ name: '📊 الحالة', value: '⏳ في انتظار الاستلام', inline: true })
+            .setColor('#5865F2');
 
         const ticketButtons = new ActionRowBuilder().addComponents(
-            new ButtonBuilder().setCustomId('claim_ticket').setLabel('استلام التذكرة (Claim)').setEmoji('🙋‍♂️').setStyle(ButtonStyle.Success),
+            new ButtonBuilder().setCustomId('claim_ticket').setLabel('استلام التذكرة').setEmoji('🙋‍♂️').setStyle(ButtonStyle.Success),
             new ButtonBuilder().setCustomId('close_ticket').setLabel('إغلاق').setEmoji('🔒').setStyle(ButtonStyle.Secondary),
             new ButtonBuilder().setCustomId('delete_ticket').setLabel('حذف').setEmoji('⛔').setStyle(ButtonStyle.Danger)
         );
 
         await ticketChannel.send({
-            content: adminRoleID ? `<@&${adminRoleID}> | تذكرة جديدة` : "تذكرة جديدة",
+            content: adminRoleID ? `<@&${adminRoleID}> | تذكرة جديدة` : '🎫 تذكرة جديدة',
             embeds: [ticketEmbed],
             components: [ticketButtons]
         });
@@ -339,10 +343,10 @@ client.on('interactionCreate', async (interaction) => {
         await interaction.reply({ content: `✅ تم إنشاء تذكرتك: ${ticketChannel}`, ephemeral: true });
     }
 
-    // --- 2. استلام التذكرة (Claim) ---
+    // استلام التذكرة
     if (interaction.customId === 'claim_ticket') {
         if (!interaction.member.permissions.has(PermissionFlagsBits.ManageChannels)) {
-            return interaction.reply({ content: "❌ هذا الزر مخصص للإدارة فقط!", ephemeral: true });
+            return interaction.reply({ content: '❌ هذا الزر مخصص للإدارة فقط!', ephemeral: true });
         }
 
         await interaction.channel.permissionOverwrites.edit(interaction.user.id, {
@@ -352,8 +356,8 @@ client.on('interactionCreate', async (interaction) => {
 
         const originalEmbed = interaction.message.embeds[0];
         const claimedEmbed = EmbedBuilder.from(originalEmbed)
-            .setColor("#FAB005")
-            .spliceFields(0, 1, { name: "حالة التذكرة", value: `✅ تم الاستلام بواسطة: ${interaction.user}`, inline: true });
+            .setColor('#FAB005')
+            .spliceFields(0, 1, { name: '📊 الحالة', value: `✅ تم الاستلام بواسطة: ${interaction.user}`, inline: true });
 
         const updatedButtons = new ActionRowBuilder().addComponents(
             new ButtonBuilder().setCustomId('claimed').setLabel('مستلمة').setDisabled(true).setStyle(ButtonStyle.Success),
@@ -365,49 +369,78 @@ client.on('interactionCreate', async (interaction) => {
         await interaction.followUp({ content: `👨‍💻 الإداري ${interaction.user} سيتولى مساعدتك الآن.` });
     }
 
-    // --- 3. إغلاق وحذف التذكرة ---
+    // إغلاق التذكرة
     if (interaction.customId === 'close_ticket') {
         await interaction.reply('🔒 سيتم إغلاق التذكرة خلال 5 ثوانٍ...');
         setTimeout(() => interaction.channel.delete().catch(() => null), 5000);
     }
-}); // هذا هو القوس اللي كان ناقص في الكود حقك!
+});
 
+// ═══════════════════════════════════════════════════════════════════════════════
+// 👋 الترحيب التلقائي
+// ═══════════════════════════════════════════════════════════════════════════════
 client.on('guildMemberAdd', async (member) => {
-    console.log(`👤 عضو جديد دخل: ${member.user.tag} في سيرفر: ${member.guild.name}`);
-
     try {
-        // سحب الإعدادات
         const settings = await db.get(`settings_${member.guild.id}`);
+        if (!settings || !settings.welcomeChannelId) return;
 
-        if (!settings) {
-            console.log("❌ لا توجد إعدادات محفوظة لهذا السيرفر في قاعدة البيانات.");
-            return;
-        }
+        const channel = member.guild.channels.cache.get(settings.welcomeChannelId);
+        if (!channel) return;
 
-        console.log("✅ تم العثور على الإعدادات:", settings);
-
-        // تحديد القناة: سنعتمد على الـ ID الذي وضعته في الداشبورد (وهذا الأضمن)
-        // أو نبحث عن قناة اسمها "welcome" كخطة بديلة
-        const channelId = settings.welcomeChannelId; // تأكد أن هذا الاسم مطابق لما تحفظه في الـ API
-        const channel = member.guild.channels.cache.get(channelId) ||
-            member.guild.channels.cache.find(ch => ch.name.includes('welcome') || ch.name.includes('ترحيب'));
-
-        if (!channel) {
-            console.log("❌ لم أستطع إيجاد قناة الترحيب (تأكد من الـ ID أو اسم القناة).");
-            return;
-        }
-
-        // تجهيز الرسالة
-        let msg = settings.welcomeMessage || "أهلاً بك [user] في [server]";
-        msg = msg.replace('[user]', `${member}`)
-            .replace('[server]', `${member.guild.name}`);
+        let msg = settings.welcomeMessage || 'أهلاً [user] في [server]';
+        msg = msg
+            .replace('[user]', `${member}`)
+            .replace('[server]', `${member.guild.name}`)
+            .replace('[members]', `${member.guild.memberCount}`);
 
         await channel.send(msg);
-        console.log(`🚀 تم إرسال رسالة الترحيب بنجاح في قناة: ${channel.name}`);
-
     } catch (error) {
-        console.error("🚨 حدث خطأ:", error);
+        console.error('🚨 خطأ في الترحيب:', error.message);
     }
-}); // إغلاق حدث guildMemberAdd أو interactionCreate
+});
 
-client.login(process.env.TOKEN); // هذا يجب أن يكون السطر الأخير تماماً
+// ═══════════════════════════════════════════════════════════════════════════════
+// ⭐ نظام المستويات (XP)
+// ═══════════════════════════════════════════════════════════════════════════════
+client.on('messageCreate', async (message) => {
+    if (message.author.bot || !message.guild) return;
+
+    const cooldownKey = `xp_cooldown_${message.guild.id}_${message.author.id}`;
+    const lastXP = await db.get(cooldownKey);
+    const now = Date.now();
+
+    if (lastXP && now - lastXP < 60000) return; // 1 دقيقة كول داون
+
+    const xpAmount = Math.floor(Math.random() * 11) + 15; // 15-25 XP
+    const xpKey = `xp_${message.guild.id}_${message.author.id}`;
+    const levelKey = `level_${message.guild.id}_${message.author.id}`;
+
+    const currentXP = await db.get(xpKey) || 0;
+    const currentLevel = await db.get(levelKey) || 1;
+    const newXP = currentXP + xpAmount;
+
+    // حساب XP المطلوب للمستوى التالي
+    const xpNeeded = Math.floor(100 * Math.pow(1.5, currentLevel - 1));
+
+    if (newXP >= xpNeeded) {
+        await db.set(levelKey, currentLevel + 1);
+        await db.set(xpKey, newXP - xpNeeded);
+        
+        // إشعار بالمستوى الجديد
+        try {
+            await message.channel.send(`🎉 مبروك ${message.author}! وصلت للمستوى **${currentLevel + 1}**!`);
+        } catch (e) {}
+    } else {
+        await db.set(xpKey, newXP);
+    }
+
+    await db.set(cooldownKey, now);
+});
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// 🔐 تسجيل الدخول
+// ═══════════════════════════════════════════════════════════════════════════════
+client.login(config.bot.token).catch(err => {
+    console.error('❌ فشل تسجيل الدخول:', err.message);
+    process.exit(1);
+});
