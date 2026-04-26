@@ -12,7 +12,7 @@ module.exports = {
         token: process.env.TOKEN,
         clientId: process.env.CLIENT_ID,
         clientSecret: process.env.CLIENT_SECRET,
-        ownerId: process.env.OWNER_ID || 'YOUR_ID_HERE',
+        ownerId: process.env.OWNER_ID || '846400750799945768',
         prefix: process.env.PREFIX || '!',
     },
 
