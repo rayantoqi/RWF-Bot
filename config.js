@@ -21,7 +21,10 @@ module.exports = {
     // ═══════════════════════════════════════════════════════════════════════════════
     website: {
         port: process.env.PORT || 8080,
-        callbackURL: process.env.CALLBACK_URL || 'http://localhost:8080/auth/discord/callback',
+        // ✅ دعم Railway تلقائياً — يستخدم RAILWAY_PUBLIC_DOMAIN إن وجد
+        callbackURL: process.env.CALLBACK_URL || (process.env.RAILWAY_PUBLIC_DOMAIN 
+            ? `https://${process.env.RAILWAY_PUBLIC_DOMAIN}/auth/discord/callback` 
+            : 'http://localhost:8080/auth/discord/callback'),
         sessionSecret: process.env.SESSION_SECRET || 'rayan1234_change_this_in_production',
     },
 

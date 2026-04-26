@@ -336,7 +336,7 @@
             </div>
         </div>
 
-        <a href="https://discord.com/api/oauth2/authorize?client_id=YOUR_CLIENT_ID&permissions=8&scope=bot%20applications.commands" 
+        <a href="#" id="invite-btn"
            class="btn btn-primary" style="font-size: 1.2rem; padding: 18px 50px;">
             <i class="fab fa-discord"></i>
             إضافة البوت الآن
@@ -384,6 +384,21 @@
                 console.error('خطأ في الإحصائيات:', error);
             }
         }
+
+        // ✅ تحديث رابط إضافة البوت ديناميكياً
+        async function updateInviteLink() {
+            try {
+                const res = await fetch('/api/client-id');
+                const data = await res.json();
+                if (data.clientId) {
+                    document.getElementById('invite-btn').href = 
+                        `https://discord.com/api/oauth2/authorize?client_id=${data.clientId}&permissions=8&scope=bot%20applications.commands`;
+                }
+            } catch (e) {
+                console.error('خطأ في جلب Client ID:', e);
+            }
+        }
+        updateInviteLink();
 
         // تشغيل فوري + تحديث كل 5 ثوان
         updateStats();

@@ -35,12 +35,19 @@ const client = new Client({
 });
 
 // 4. Middleware (مرة واحدة فقط)
+app.enable('trust proxy'); // ✅ ضروري جداً على Railway (HTTPS + Proxy)
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(session({
     secret: config.website.sessionSecret,
     resave: false,
     saveUninitialized: false,
+    cookie: {
+        secure: process.env.NODE_ENV === 'production' || !!process.env.RAILWAY_ENVIRONMENT, // ✅ HTTPS على Railway
+        sameSite: 'lax',
+        maxAge: 1000 * 60 * 60 * 24 * 7 // 7 أيام
+    }
 }));
 app.use(passport.initialize());
 app.use(passport.session());
@@ -68,11 +75,25 @@ app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'website', 'index.html'));
 });
 
+// ✅ endpoint لإرجاع Client ID للموقع
+app.get('/api/client-id', (req, res) => {
+    res.json({ clientId: config.bot.clientId });
+});
+
 // تسجيل الدخول
 app.get('/login', passport.authenticate('discord'));
 app.get('/auth/discord/callback', passport.authenticate('discord', {
     failureRedirect: '/'
-}), (req, res) => res.redirect('/dashboard'));
+}), (req, res) => {
+    console.log('✅ تسجيل دخول ناجح:', req.user?.username || req.user?.id);
+    res.redirect('/dashboard');
+});
+
+// ❌ معالجة أخطاء OAuth
+app.get('/auth/discord/callback/error', (req, res) => {
+    console.error('❌ فشل OAuth Discord');
+    res.redirect('/?error=oauth_failed');
+});
 
 // الداشبورد
 app.get('/dashboard', (req, res) => {
