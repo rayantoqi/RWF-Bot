@@ -68,6 +68,11 @@ app.post('/api/send-ticket-panel/:guildID', async (req, res) => {
             type: type || 'buttons'
         });
 
+        await db.set(`ticket_roles_${req.params.guildID}`, {
+            tech: mcRole,     // رتبة الماين كرافت للقسم الفني
+            report: discordRole, // رتبة الديسكورد للشكاوى
+            ask: discordRole     // رتبة الديسكورد للاستفسارات
+        });
         const embed = new EmbedBuilder()
             .setTitle(title || "مركز الدعم الفني")
             .setDescription(description || "اضغط أدناه للتواصل مع الإدارة")
@@ -285,6 +290,15 @@ client.on('interactionCreate', async interaction => {
     if (interaction.customId === 'create_ticket' || interaction.customId === 'ticket_select') {
         // جلب الإعدادات المخزنة للسيرفر
         const settings = await db.get(`ticket_settings_${interaction.guildId}`) || { limit: 1 };
+
+        const selectedType = interaction.isStringSelectMenu() ? interaction.values[0] : 'general';
+
+        const roles = await db.get(`ticket_roles_${interaction.guildId}`);
+
+        let adminRoleID = null;
+        if (roles) {
+            adminRoleID = roles[selectedType] || roles['general'];
+        }
 
         // البحث عن التذاكر المفتوحة لهذا العضو فقط
         const openTickets = interaction.guild.channels.cache.filter(c =>

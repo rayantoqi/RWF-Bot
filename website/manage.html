@@ -170,6 +170,19 @@
                 <input type="color" id="embedColor" value="#5865F2" style="height: 50px; cursor: pointer;">
             </div>
         </div>
+        <div class="card">
+            <h3>⚙️ إعدادات الرتب المسؤولة</h3>
+    
+            <div class="input-group">
+                <label>رتبة دعم الماين كرافت (ID):</label>
+                <input type="text" id="mcRole" placeholder="أدخل ID الرتبة هنا">
+            </div>
+
+            <div class="input-group">
+                <label>رتبة دعم الديسكورد (ID):</label>
+                <input type="text" id="discordRole" placeholder="أدخل ID الرتبة هنا">
+            </div>
+        </div>
         <div>
             <button class="btn-save" onclick="sendTicketPanel()" style="background: #3ba55c;">إرسال اللوحة للسيرفر
                 🚀</button>
@@ -196,6 +209,8 @@
             const type = document.getElementById('ticketType').value; // النوع (أزرار أو قائمة)
             const limit = document.getElementById('ticketLimit').value; // الحد الأقصى
             const color = document.getElementById('embedColor').value; // اللون
+            const mcRole = document.getElementById('mcRole').value;
+            const discordRole = document.getElementById('discordRole').value;
 
             // 2. إرسال كل البيانات للباك إند
             const res = await fetch(`/api/send-ticket-panel/${guildID}`, {
@@ -206,7 +221,9 @@
                     title,
                     type,
                     limit,
-                    color
+                    color,
+                    mcRole,
+                    discordRole
                 })
             });
 
