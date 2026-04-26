@@ -305,7 +305,7 @@ client.on('interactionCreate', async interaction => {
             c.name.startsWith('ticket-') && c.name.includes(interaction.user.username.toLowerCase())
         ).size;
 
-        const adminRoleID = "ID_رتبة_الإدارة_هنا";
+        //const adminRoleID = "ID_رتبة_الإدارة_هنا";
 
         const ticketChannel = await interaction.guild.channels.create({
             name: `ticket-${interaction.user.username}`,
