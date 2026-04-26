@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>RWF | لوحة إدارة السيرفر</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -63,7 +62,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.5rem;
+            font-size: 1.8rem;
         }
 
         .guild-name { font-size: 1.3rem; font-weight: 600; margin-bottom: 5px; word-break: break-word; }
@@ -239,6 +238,8 @@
             100% { transform: rotate(360deg); }
         }
 
+        .icon { font-style: normal; }
+
         @media (max-width: 1024px) {
             .sidebar { width: 70px; }
             .sidebar-header h3, .guild-name, .menu-item span { display: none; }
@@ -251,18 +252,18 @@
     <div class="sidebar">
         <div class="sidebar-header">
             <img class="guild-icon" id="guildIcon" src="" alt="Guild Icon" style="display:none;">
-            <div class="guild-icon" id="guildIconFallback" style="display:flex;"><i class="fas fa-server"></i></div>
+            <div class="guild-icon" id="guildIconFallback" style="display:flex;"><span class="icon">🖥️</span></div>
             <div class="guild-name" id="guildName">تحميل...</div>
             <div style="color: var(--text-muted); font-size: 0.8rem; margin-top: 5px;" id="guildMembers">...</div>
         <div class="sidebar-menu">
             <div class="menu-item active" data-section="tickets">
-                <i class="fas fa-ticket-alt"></i><span>نظام التذاكر</span>
+                <span class="icon">🎫</span><span>نظام التذاكر</span>
             </div>
             <div class="menu-item" data-section="welcome">
-                <i class="fas fa-comment-dots"></i><span>رسائل الترحيب</span>
+                <span class="icon">💬</span><span>رسائل الترحيب</span>
             </div>
             <a href="/dashboard" style="text-decoration: none; color: inherit;">
-                <div class="menu-item"><i class="fas fa-arrow-left"></i><span>السيرفرات</span></div>
+                <div class="menu-item"><span class="icon">⬅️</span><span>السيرفرات</span></div>
             </a>
         </div>
 
@@ -270,69 +271,69 @@
         <div class="header">
             <div>
                 <h1 id="pageTitle">نظام التذاكر</h1>
-                <div style="color: var(--success); font-size: 0.9rem;"><i class="fas fa-circle" style="font-size: 8px;"></i> متصل</div>
-            <button class="btn btn-primary" onclick="saveAllSettings()"><i class="fas fa-save"></i> حفظ الكل</button>
+                <div style="color: var(--success); font-size: 0.9rem;"><span class="icon">🟢</span> متصل</div>
+            <button class="btn btn-primary" onclick="saveAllSettings()"><span class="icon">💾</span> حفظ الكل</button>
         </div>
 
         <div id="errorContainer"></div>
 
         <div id="tickets-section" class="section">
             <div class="card">
-                <h3 class="card-title"><i class="fas fa-ticket-alt"></i> إرسال لوحة التذاكر</h3>
+                <h3 class="card-title"><span class="icon">🎫</span> إرسال لوحة التذاكر</h3>
                 <div class="input-group">
-                    <label class="input-label"><i class="fas fa-hashtag"></i> قناة اللوحة</label>
+                    <label class="input-label"><span class="icon">#️⃣</span> قناة اللوحة</label>
                     <select id="ticketChannel"><option>جاري التحميل...</option></select>
                 </div>
                 <div class="input-group">
-                    <label class="input-label"><i class="fas fa-heading"></i> العنوان</label>
+                    <label class="input-label"><span class="icon">📋</span> العنوان</label>
                     <input type="text" id="ticketTitle" placeholder="مركز الدعم الفني" value="مركز الدعم">
                 </div>
                 <div class="input-group">
-                    <label class="input-label"><i class="fas fa-align-right"></i> الوصف</label>
+                    <label class="input-label"><span class="icon">📝</span> الوصف</label>
                     <input type="text" id="ticketDesc" placeholder="اضغط أدناه لفتح تذكرة" value="اضغط أدناه للتواصل مع الإدارة">
                 </div>
                 <div class="input-group">
-                    <label class="input-label"><i class="fas fa-list"></i> نوع التفاعل</label>
+                    <label class="input-label"><span class="icon">🔘</span> نوع التفاعل</label>
                     <select id="ticketType">
                         <option value="buttons">زر واحد</option>
                         <option value="select">قائمة منسدلة</option>
                     </select>
                 </div>
                 <div class="input-group">
-                    <label class="input-label"><i class="fas fa-layer-group"></i> الحد الأقصى للتذاكر</label>
+                    <label class="input-label"><span class="icon">🔢</span> الحد الأقصى للتذاكر</label>
                     <input type="number" id="ticketLimit" value="2" min="1" max="10">
                 </div>
                 <div class="input-group">
-                    <label class="input-label"><i class="fas fa-palette"></i> اللون</label>
+                    <label class="input-label"><span class="icon">🎨</span> اللون</label>
                     <input type="color" id="embedColor" value="#5865F2">
                 </div>
-                <button class="btn btn-success btn-full" onclick="sendTicketPanel()"><i class="fas fa-paper-plane"></i> إرسال اللوحة</button>
+                <button class="btn btn-success btn-full" onclick="sendTicketPanel()"><span class="icon">📤</span> إرسال اللوحة</button>
             </div>
 
             <div class="card">
-                <h3 class="card-title"><i class="fas fa-users-cog"></i> رتب الإدارة</h3>
+                <h3 class="card-title"><span class="icon">👥</span> رتب الإدارة</h3>
                 <div class="input-group">
-                    <label class="input-label"><i class="fas fa-shield-alt"></i> رتبة الدعم الفني</label>
+                    <label class="input-label"><span class="icon">🛡️</span> رتبة الدعم الفني</label>
                     <input type="text" id="mcRole" placeholder="ضع ID الرتبة هنا">
                 </div>
                 <div class="input-group">
-                    <label class="input-label"><i class="fas fa-shield-alt"></i> رتبة الشكاوى</label>
+                    <label class="input-label"><span class="icon">🛡️</span> رتبة الشكاوى</label>
                     <input type="text" id="discordRole" placeholder="ضع ID الرتبة هنا">
                 </div>
         </div>
 
         <div id="welcome-section" class="section" style="display: none;">
             <div class="card">
-                <h3 class="card-title"><i class="fas fa-comment-dots"></i> إعدادات الترحيب</h3>
+                <h3 class="card-title"><span class="icon">💬</span> إعدادات الترحيب</h3>
                 <div class="input-group">
-                    <label class="input-label"><i class="fas fa-hashtag"></i> قناة الترحيب</label>
+                    <label class="input-label"><span class="icon">#️⃣</span> قناة الترحيب</label>
                     <select id="welcomeChannel"><option>جاري التحميل...</option></select>
                 </div>
                 <div class="input-group">
-                    <label class="input-label"><i class="fas fa-edit"></i> نص الرسالة</label>
+                    <label class="input-label"><span class="icon">✏️</span> نص الرسالة</label>
                     <textarea id="welcomeMessage" rows="4">أهلاً بك [user] في [server] 🎉</textarea>
                 </div>
-                <button class="btn btn-success btn-full" onclick="saveWelcome()"><i class="fas fa-save"></i> حفظ إعدادات الترحيب</button>
+                <button class="btn btn-success btn-full" onclick="saveWelcome()"><span class="icon">💾</span> حفظ إعدادات الترحيب</button>
             </div>
     </div>
 
@@ -342,7 +343,7 @@
 
         function showError(msg) {
             document.getElementById('errorContainer').innerHTML = 
-                `<div class="error-box"><i class="fas fa-exclamation-triangle"></i> ${msg}</div>`;
+                `<div class="error-box"><span class="icon">⚠️</span> ${msg}</div>`;
         }
 
         function clearError() {
