@@ -345,12 +345,8 @@ client.on('interactionCreate', async interaction => {
                 ephemeral: true
             });
         }
-        
 
-        const ticketEmbed = new EmbedBuilder()
-            .setTitle('تكت جديد 🎫')
-            .setDescription(`أهلاً بك ${interaction.user}، فريق الدعم سيكون معك قريباً.\nاضغط على الزر أدناه لإغلاق التكت.`)
-            .setColor('#57f287');
+
 
         const closeButton = new ActionRowBuilder()
             .addComponents(
