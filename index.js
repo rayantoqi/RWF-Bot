@@ -282,7 +282,7 @@ client.on('interactionCreate', async (interaction) => {
             await interaction.reply({ content: 'حدث خطأ أثناء التنفيذ!', flags: 64 }).catch(() => null);
         }
     }
-})
+});
 
 
 client.on('interactionCreate', async (interaction) => {
