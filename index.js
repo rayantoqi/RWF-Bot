@@ -285,7 +285,7 @@ client.on('interactionCreate', async (interaction) => {
 })
 
 
-client.on('interactionCreate', async interaction => {
+client.on('interactionCreate', async (interaction) => {
     // التأكد أن التفاعل هو ضغطة زر "فتح تكت"
     if (interaction.customId === 'create_ticket' || interaction.customId === 'ticket_select') {
         // جلب الإعدادات المخزنة للسيرفر
