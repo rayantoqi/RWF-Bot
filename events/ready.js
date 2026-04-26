@@ -48,7 +48,7 @@ module.exports = {
         }
 
         // 4. رسالة ترحيب للمطور
-        const ownerId = process.env.OWNER_ID || 'YOUR_ID_HERE';
+        const ownerId = process.env['OWNER_ID'] || '846400750799945768';
         const owner = await client.users.fetch(ownerId).catch(() => null);
         if (owner) {
             await owner.send({
