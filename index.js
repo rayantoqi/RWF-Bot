@@ -283,21 +283,54 @@ client.on('interactionCreate', async (interaction) => {
 client.on('interactionCreate', async interaction => {
     // التأكد أن التفاعل هو ضغطة زر "فتح تكت"
     if (interaction.customId === 'create_ticket' || interaction.customId === 'ticket_select') {
-    // جلب الإعدادات المخزنة للسيرفر
-    const settings = await db.get(`ticket_settings_${interaction.guildId}`) || { limit: 1 };
-    
-    // البحث عن التذاكر المفتوحة لهذا العضو فقط
-    const openTickets = interaction.guild.channels.cache.filter(c => 
-        c.name.startsWith('ticket-') && c.name.includes(interaction.user.username.toLowerCase())
-    ).size;
+        // جلب الإعدادات المخزنة للسيرفر
+        const settings = await db.get(`ticket_settings_${interaction.guildId}`) || { limit: 1 };
 
-    // إذا تجاوز الحد الأقصى نمنعه
-    if (openTickets >= settings.limit) {
-        return interaction.reply({ 
-            content: `❌ لا يمكنك فتح أكثر من ${settings.limit} تذكرة في هذا السيرفر.`, 
-            ephemeral: true 
+        // البحث عن التذاكر المفتوحة لهذا العضو فقط
+        const openTickets = interaction.guild.channels.cache.filter(c =>
+            c.name.startsWith('ticket-') && c.name.includes(interaction.user.username.toLowerCase())
+        ).size;
+
+        const adminRoleID = "ID_رتبة_الإدارة_هنا";
+
+        const ticketChannel = await interaction.guild.channels.create({
+            name: `ticket-${interaction.user.username}`,
+            type: ChannelType.GuildText,
+            permissionOverwrites: [
+                { id: interaction.guild.id, deny: [PermissionFlagsBits.ViewChannel] },
+                { id: interaction.user.id, allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages] },
+                { id: adminRoleID, allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages] },
+            ],
         });
-    }
+
+        const ticketEmbed = new EmbedBuilder()
+            .setTitle("نظام تذاكر RWFMC")
+            .setDescription(`مرحباً ${interaction.user}\nتم فتح تذكرة بخصوص: **${interaction.values ? interaction.values[0] : 'دعم عام'}**\nيرجى الانتظار حتى يتم الرد عليك.`)
+            .addFields({ name: "حالة التذكرة", value: "⏳ في انتظار الاستلام (Unclaimed)", inline: true })
+            .setColor("#5865F2");
+
+        const ticketButtons = new ActionRowBuilder().addComponents(
+            new ButtonBuilder().setCustomId('claim_ticket').setLabel('استلام التذكرة (Claim)').setEmoji('🙋‍♂️').setStyle(ButtonStyle.Success),
+            new ButtonBuilder().setCustomId('close_ticket').setLabel('إغلاق').setEmoji('🔒').setStyle(ButtonStyle.Secondary),
+            new ButtonBuilder().setCustomId('delete_ticket').setLabel('حذف').setEmoji('⛔').setStyle(ButtonStyle.Danger)
+        );
+
+        await ticketChannel.send({
+            content: `<@&${adminRoleID}> | تذكرة جديدة من ${interaction.user}`,
+            embeds: [ticketEmbed],
+            components: [ticketButtons]
+        });
+
+        await interaction.reply({ content: `✅ تم إنشاء تذكرتك: ${ticketChannel}`, ephemeral: true });
+
+
+        // إذا تجاوز الحد الأقصى نمنعه
+        if (openTickets >= settings.limit) {
+            return interaction.reply({
+                content: `❌ لا يمكنك فتح أكثر من ${settings.limit} تذكرة في هذا السيرفر.`,
+                ephemeral: true
+            });
+        }
         // إنشاء القناة وتحديد الصلاحيات
         const ticketChannel = await interaction.guild.channels.create({
             name: channelName,
@@ -348,6 +381,35 @@ client.on('interactionCreate', async interaction => {
     }
 });
 
+
+if (interaction.customId === 'claim_ticket') {
+    // التأكد أن الذي ضغط الزر لديه صلاحيات إدارية (أو رتبة الدعم)
+    if (!interaction.member.permissions.has(PermissionFlagsBits.ManageChannels)) {
+        return interaction.reply({ content: "❌ هذا الزر مخصص للإدارة فقط!", ephemeral: true });
+    }
+
+    // تحديث الأذونات: العضو والإداري فقط من يرى القناة، ومنع باقي الإدارة (اختياري)
+    await interaction.channel.permissionOverwrites.edit(interaction.user.id, {
+        ViewChannel: true,
+        SendMessages: true
+    });
+
+    // تحديث الرسالة الأصلية
+    const originalEmbed = interaction.message.embeds[0];
+    const claimedEmbed = EmbedBuilder.from(originalEmbed)
+        .setColor("#FAB005")
+        .spliceFields(0, 1, { name: "حالة التذكرة", value: `✅ تم الاستلام بواسطة: ${interaction.user}`, inline: true });
+
+    // تعطيل زر الـ Claim بعد الضغط
+    const updatedButtons = new ActionRowBuilder().addComponents(
+        new ButtonBuilder().setCustomId('claimed').setLabel('مستلمة').setDisabled(true).setStyle(ButtonStyle.Success),
+        new ButtonBuilder().setCustomId('close_ticket').setLabel('إغلاق').setStyle(ButtonStyle.Secondary),
+        new ButtonBuilder().setCustomId('delete_ticket').setLabel('حذف').setStyle(ButtonStyle.Danger)
+    );
+
+    await interaction.update({ embeds: [claimedEmbed], components: [updatedButtons] });
+    await interaction.followUp({ content: `👨‍💻 الإداري ${interaction.user} سيتولى مساعدتك الآن.` });
+}
 
 client.on('guildMemberAdd', async (member) => {
     console.log(`👤 عضو جديد دخل: ${member.user.tag} في سيرفر: ${member.guild.name}`);
