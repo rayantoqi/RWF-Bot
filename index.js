@@ -137,6 +137,19 @@ app.get('/api/user-guilds', (req, res) => {
     res.json(guildsWithBot);
 });
 
+// ✅ معلومات السيرفر (اسم + أيقونة)
+app.get('/api/guild-info/:guildID', async (req, res) => {
+    if (!req.isAuthenticated()) return res.status(401).json({ error: 'Unauthorized' });
+    const guild = client.guilds.cache.get(req.params.guildID);
+    if (!guild) return res.status(404).json({ error: 'السيرفر غير موجود' });
+    res.json({
+        id: guild.id,
+        name: guild.name,
+        icon: guild.iconURL({ size: 128 }) || null,
+        memberCount: guild.memberCount
+    });
+});
+
 // قنوات السيرفر
 app.get('/api/guild-channels/:guildID', async (req, res) => {
     if (!req.isAuthenticated()) return res.status(401).send('غير مصرح لك');

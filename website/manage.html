@@ -38,7 +38,8 @@
             background: linear-gradient(180deg, var(--sidebar), var(--bg-tertiary));
             height: 100vh;
             position: fixed;
-            border-right: 1px solid var(--border);
+            right: 0;
+            border-left: 1px solid var(--border);
             overflow-y: auto;
             transition: all 0.3s ease;
         }
@@ -58,9 +59,14 @@
             margin: 0 auto 15px;
             border: 3px solid var(--primary);
             box-shadow: var(--shadow);
+            background: var(--bg-secondary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
         }
 
-        .guild-name { font-size: 1.3rem; font-weight: 600; margin-bottom: 5px; }
+        .guild-name { font-size: 1.3rem; font-weight: 600; margin-bottom: 5px; word-break: break-word; }
 
         .sidebar-menu { padding: 20px; }
 
@@ -85,7 +91,7 @@
         }
 
         .main-content {
-            margin-left: 280px;
+            margin-right: 280px;
             height: 100vh;
             overflow-y: auto;
             padding: 30px;
@@ -185,7 +191,7 @@
             box-shadow: 0 4px 15px rgba(87, 242, 135, 0.4);
         }
 
-        .btn-full { width: 100%; padding: 18px; font-size: 1.1rem; }
+        .btn-full { width: 100%; padding: 18px; font-size: 1.1rem; justify-content: center; }
 
         .notification {
             position: fixed;
@@ -208,10 +214,35 @@
             to { opacity: 1; transform: translate(-50%, 0); }
         }
 
+        .error-box {
+            background: rgba(237, 66, 69, 0.1);
+            border: 1px solid var(--danger);
+            color: var(--danger);
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid var(--bg-primary);
+            border-top: 3px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
         @media (max-width: 1024px) {
             .sidebar { width: 70px; }
             .sidebar-header h3, .guild-name, .menu-item span { display: none; }
-            .main-content { margin-left: 70px; }
+            .main-content { margin-right: 70px; margin-left: 0; }
             .menu-item { justify-content: center; }
         }
     </style>
@@ -219,8 +250,10 @@
 <body>
     <div class="sidebar">
         <div class="sidebar-header">
-            <img class="guild-icon" id="guildIcon" src="" alt="Guild Icon">
+            <img class="guild-icon" id="guildIcon" src="" alt="Guild Icon" style="display:none;">
+            <div class="guild-icon" id="guildIconFallback" style="display:flex;"><i class="fas fa-server"></i></div>
             <div class="guild-name" id="guildName">تحميل...</div>
+            <div style="color: var(--text-muted); font-size: 0.8rem; margin-top: 5px;" id="guildMembers">...</div>
         <div class="sidebar-menu">
             <div class="menu-item active" data-section="tickets">
                 <i class="fas fa-ticket-alt"></i><span>نظام التذاكر</span>
@@ -241,6 +274,8 @@
             <button class="btn btn-primary" onclick="saveAllSettings()"><i class="fas fa-save"></i> حفظ الكل</button>
         </div>
 
+        <div id="errorContainer"></div>
+
         <div id="tickets-section" class="section">
             <div class="card">
                 <h3 class="card-title"><i class="fas fa-ticket-alt"></i> إرسال لوحة التذاكر</h3>
@@ -253,6 +288,10 @@
                     <input type="text" id="ticketTitle" placeholder="مركز الدعم الفني" value="مركز الدعم">
                 </div>
                 <div class="input-group">
+                    <label class="input-label"><i class="fas fa-align-right"></i> الوصف</label>
+                    <input type="text" id="ticketDesc" placeholder="اضغط أدناه لفتح تذكرة" value="اضغط أدناه للتواصل مع الإدارة">
+                </div>
+                <div class="input-group">
                     <label class="input-label"><i class="fas fa-list"></i> نوع التفاعل</label>
                     <select id="ticketType">
                         <option value="buttons">زر واحد</option>
@@ -260,7 +299,7 @@
                     </select>
                 </div>
                 <div class="input-group">
-                    <label class="input-label"><i class="fas fa-layer-group"></i> الحد الأقصى</label>
+                    <label class="input-label"><i class="fas fa-layer-group"></i> الحد الأقصى للتذاكر</label>
                     <input type="number" id="ticketLimit" value="2" min="1" max="10">
                 </div>
                 <div class="input-group">
@@ -273,12 +312,12 @@
             <div class="card">
                 <h3 class="card-title"><i class="fas fa-users-cog"></i> رتب الإدارة</h3>
                 <div class="input-group">
-                    <label class="input-label"><i class="fab fa-minecraft"></i> رتبة الماين كرافت</label>
-                    <input type="text" id="mcRole" placeholder="123456789012345678">
+                    <label class="input-label"><i class="fas fa-shield-alt"></i> رتبة الدعم الفني</label>
+                    <input type="text" id="mcRole" placeholder="ضع ID الرتبة هنا">
                 </div>
                 <div class="input-group">
-                    <label class="input-label"><i class="fab fa-discord"></i> رتبة الديسكورد</label>
-                    <input type="text" id="discordRole" placeholder="123456789012345678">
+                    <label class="input-label"><i class="fas fa-shield-alt"></i> رتبة الشكاوى</label>
+                    <input type="text" id="discordRole" placeholder="ضع ID الرتبة هنا">
                 </div>
         </div>
 
@@ -293,7 +332,7 @@
                     <label class="input-label"><i class="fas fa-edit"></i> نص الرسالة</label>
                     <textarea id="welcomeMessage" rows="4">أهلاً بك [user] في [server] 🎉</textarea>
                 </div>
-                <button class="btn btn-success btn-full" onclick="saveWelcome()"><i class="fas fa-save"></i> حفظ</button>
+                <button class="btn btn-success btn-full" onclick="saveWelcome()"><i class="fas fa-save"></i> حفظ إعدادات الترحيب</button>
             </div>
     </div>
 
@@ -301,15 +340,72 @@
         const guildID = window.location.pathname.split('/').pop();
         let channels = [];
 
+        function showError(msg) {
+            document.getElementById('errorContainer').innerHTML = 
+                `<div class="error-box"><i class="fas fa-exclamation-triangle"></i> ${msg}</div>`;
+        }
+
+        function clearError() {
+            document.getElementById('errorContainer').innerHTML = '';
+        }
+
         async function init() {
-            await loadChannels();
-            await loadSettings();
+            try {
+                await loadGuildInfo();
+                await loadChannels();
+                await loadSettings();
+            } catch (e) {
+                console.error('خطأ في التهيئة:', e);
+            }
+        }
+
+        async function loadGuildInfo() {
+            try {
+                const res = await fetch(`/api/guild-info/${guildID}`);
+                if (res.status === 401) {
+                    showError('انتهت الجلسة! <a href="/login" style="color:var(--primary)">سجل الدخول مجدداً</a>');
+                    return;
+                }
+                if (!res.ok) {
+                    showError('تعذر جلب معلومات السيرفر. تأكد أن البوت موجود في السيرفر.');
+                    return;
+                }
+                const data = await res.json();
+                document.getElementById('guildName').textContent = data.name || 'سيرفر غير معروف';
+                document.getElementById('guildMembers').textContent = (data.memberCount || 0) + ' عضو';
+                
+                if (data.icon) {
+                    const img = document.getElementById('guildIcon');
+                    img.src = data.icon;
+                    img.style.display = 'flex';
+                    document.getElementById('guildIconFallback').style.display = 'none';
+                    img.onerror = () => {
+                        img.style.display = 'none';
+                        document.getElementById('guildIconFallback').style.display = 'flex';
+                    };
+                }
+            } catch (e) {
+                console.error('خطأ في تحميل معلومات السيرفر:', e);
+                showError('فشل الاتصال بالسيرفر. تحقق من الإنترنت.');
+            }
         }
 
         async function loadChannels() {
             try {
                 const res = await fetch(`/api/guild-channels/${guildID}`);
+                if (res.status === 401) {
+                    window.location.href = '/login';
+                    return;
+                }
+                if (!res.ok) {
+                    showError('تعذر تحميل القنوات.');
+                    return;
+                }
                 channels = await res.json();
+                if (!Array.isArray(channels) || channels.length === 0) {
+                    showError('لا توجد قنوات نصية في هذا السيرفر.');
+                    return;
+                }
                 const fill = (id) => {
                     const el = document.getElementById(id);
                     el.innerHTML = '<option value="">اختر قناة...</option>' +
@@ -317,23 +413,33 @@
                 };
                 fill('ticketChannel');
                 fill('welcomeChannel');
-            } catch (e) { console.error('خطأ في تحميل القنوات:', e); }
+                clearError();
+            } catch (e) {
+                console.error('خطأ في تحميل القنوات:', e);
+                showError('فشل تحميل القنوات. حاول تحديث الصفحة.');
+            }
         }
 
         async function loadSettings() {
             try {
                 const res = await fetch(`/api/guild-data/${guildID}`);
+                if (!res.ok) return;
                 const data = await res.json();
                 if (data.welcomeChannelId) {
                     document.getElementById('welcomeChannel').value = data.welcomeChannelId;
-                    document.getElementById('welcomeMessage').value = data.welcomeMessage || '';
                 }
-            } catch (e) { console.error('خطأ في تحميل الإعدادات:', e); }
+                if (data.welcomeMessage) {
+                    document.getElementById('welcomeMessage').value = data.welcomeMessage;
+                }
+            } catch (e) {
+                console.error('خطأ في تحميل الإعدادات:', e);
+            }
         }
 
         async function sendTicketPanel() {
-            const btn = event.target;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري...';
+            const btn = event.target.closest('button');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<div class="loading-spinner"></div> جاري...';
             btn.disabled = true;
 
             try {
@@ -343,6 +449,7 @@
                     body: JSON.stringify({
                         channelId: document.getElementById('ticketChannel').value,
                         title: document.getElementById('ticketTitle').value,
+                        description: document.getElementById('ticketDesc')?.value || 'اضغط أدناه للتواصل مع الإدارة',
                         type: document.getElementById('ticketType').value,
                         limit: document.getElementById('ticketLimit').value,
                         color: document.getElementById('embedColor').value,
@@ -351,16 +458,21 @@
                     })
                 });
                 const result = await res.json();
-                showNotification(result.success ? '✅ تم الإرسال!' : '❌ ' + (result.error || 'فشل'), result.success ? 'success' : 'error');
+                showNotification(result.success ? '✅ تم إرسال اللوحة بنجاح!' : '❌ ' + (result.error || 'فشل الإرسال'), result.success ? 'success' : 'error');
             } catch (error) {
-                showNotification('❌ خطأ في الاتصال', 'error');
+                showNotification('❌ خطأ في الاتصال بالسيرفر', 'error');
             } finally {
-                btn.innerHTML = '<i class="fas fa-paper-plane"></i> إرسال اللوحة';
+                btn.innerHTML = originalText;
                 btn.disabled = false;
             }
         }
 
         async function saveWelcome() {
+            const btn = event.target.closest('button');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<div class="loading-spinner"></div> جاري...';
+            btn.disabled = true;
+
             try {
                 const res = await fetch(`/api/save-settings/${guildID}`, {
                     method: 'POST',
@@ -373,10 +485,19 @@
                 showNotification('✅ تم حفظ إعدادات الترحيب!', 'success');
             } catch (e) {
                 showNotification('❌ خطأ في الحفظ', 'error');
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
             }
         }
 
+        function saveAllSettings() {
+            saveWelcome();
+        }
+
         function showNotification(text, type) {
+            const existing = document.querySelector('.notification');
+            if (existing) existing.remove();
             const div = document.createElement('div');
             div.className = `notification ${type}`;
             div.textContent = text;
